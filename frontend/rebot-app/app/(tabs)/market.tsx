@@ -1,21 +1,41 @@
 import { Ionicons } from '@expo/vector-icons';
-import { StyleSheet, Text, TextInput, View } from 'react-native';
+import { router } from 'expo-router';
+import { useMemo, useState } from 'react';
+import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { AppHeader } from '@/src/components/AppHeader';
+import { ProductCard } from '@/src/components/ProductCard';
 import { Screen } from '@/src/components/Screen';
+import { products } from '@/src/data/products';
+import { useCart } from '@/src/store/CartContext';
 import { colors, radius } from '@/src/theme/tokens';
 
-const products = [
-  { name: '저자극 보습 크림', tag: '피부 진정', color: '#EAE5DC' },
-  { name: '데일리 수분 케어', tag: '수분 보충', color: '#DFECF1' },
-  { name: '마그네슘 밸런스', tag: '수면 루틴', color: '#E9E2F3' },
-];
-
-function ProductCard({ name, tag, color }: (typeof products)[number]) {
-  return <View style={styles.product}><View style={[styles.productImage, { backgroundColor: color }]}><Ionicons name="leaf-outline" size={34} color="#777" /></View><Text style={styles.productTag}>{tag}</Text><Text style={styles.productName} numberOfLines={2}>{name}</Text></View>;
-}
-
 export default function MarketScreen() {
-  return <Screen><AppHeader title="마켓" leftIcon="menu" rightIcon="cart-outline" /><View style={styles.body}><View style={styles.search}><Ionicons name="search" size={22} color="#AAA" /><TextInput placeholder="제품을 검색해보세요" placeholderTextColor="#AAA" style={styles.searchInput} /></View><View style={styles.heading}><Text style={styles.headingText}>MY 추천 물품</Text><Text style={styles.more}>더보기</Text></View><View style={styles.row}>{products.map((product) => <ProductCard key={product.name} {...product} />)}</View><View style={styles.heading}><Text style={styles.headingText}>인기상품</Text><Text style={styles.more}>더보기</Text></View><View style={styles.row}>{products.slice().reverse().map((product) => <ProductCard key={`popular-${product.name}`} {...product} />)}</View></View></Screen>;
+  const [query, setQuery] = useState('');
+  const { totalCount } = useCart();
+  const recommended = products.filter((product) => product.category === 'recommended');
+  const popular = products.filter((product) => product.category === 'popular');
+  const searchResults = useMemo(() => products.filter((product) => product.name.includes(query.trim())), [query]);
+
+  return <Screen scroll><AppHeader title="마켓" leftIcon="menu" rightIcon="cart-outline" onRightPress={() => router.push('/market/cart')} />
+    <View style={styles.body}>
+      <View style={styles.search}><Ionicons name="search" size={22} color="#AAA" /><TextInput value={query} onChangeText={setQuery} placeholder="제품을 검색해보세요" placeholderTextColor="#AAA" style={styles.searchInput} />{query.length > 0 && <Pressable onPress={() => setQuery('')}><Ionicons name="close-circle" size={19} color="#AAA" /></Pressable>}</View>
+      {totalCount > 0 && <Pressable style={styles.cartHint} onPress={() => router.push('/market/cart')}><Text style={styles.cartHintText}>장바구니에 담긴 상품 {totalCount}개</Text><Ionicons name="chevron-forward" size={16} color={colors.muted} /></Pressable>}
+
+      {query.trim().length > 0 ? (
+        <>
+          <View style={styles.heading}><Text style={styles.headingText}>검색 결과 ({searchResults.length})</Text></View>
+          {searchResults.length === 0 ? <Text style={styles.empty}>일치하는 상품이 없어요</Text> : <View style={styles.grid}>{searchResults.map((product) => <ProductCard key={product.id} product={product} />)}</View>}
+        </>
+      ) : (
+        <>
+          <View style={styles.heading}><Text style={styles.headingText}>MY 추천 물품</Text><Pressable onPress={() => router.push({ pathname: '/market/list', params: { category: 'recommended' } })}><Text style={styles.more}>더보기</Text></Pressable></View>
+          <View style={styles.row}>{recommended.map((product) => <ProductCard key={product.id} product={product} />)}</View>
+          <View style={styles.heading}><Text style={styles.headingText}>인기상품</Text><Pressable onPress={() => router.push({ pathname: '/market/list', params: { category: 'popular' } })}><Text style={styles.more}>더보기</Text></Pressable></View>
+          <View style={styles.row}>{popular.map((product) => <ProductCard key={product.id} product={product} />)}</View>
+        </>
+      )}
+    </View>
+  </Screen>;
 }
 
-const styles = StyleSheet.create({ body: { flex: 1, paddingTop: 20 }, search: { height: 60, marginHorizontal: 24, borderRadius: radius.md, backgroundColor: colors.surfaceStrong, flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 20 }, searchInput: { flex: 1, fontSize: 14 }, heading: { height: 56, marginTop: 10, paddingHorizontal: 28, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }, headingText: { fontSize: 15, fontWeight: '700' }, more: { fontSize: 12, color: colors.muted }, row: { flexDirection: 'row', gap: 9, paddingHorizontal: 24 }, product: { width: '31%' }, productImage: { height: 112, borderRadius: 12, alignItems: 'center', justifyContent: 'center' }, productTag: { fontSize: 10, color: colors.muted, marginTop: 8 }, productName: { fontSize: 13, fontWeight: '600', marginTop: 3, lineHeight: 18 } });
+const styles = StyleSheet.create({ body: { flex: 1, paddingTop: 20, paddingBottom: 40 }, search: { height: 60, marginHorizontal: 24, borderRadius: radius.md, backgroundColor: colors.surfaceStrong, flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 20 }, searchInput: { flex: 1, fontSize: 14 }, cartHint: { marginHorizontal: 24, marginTop: 12, height: 44, borderRadius: radius.md, backgroundColor: colors.warningSoft, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }, cartHintText: { fontSize: 13, fontWeight: '600', color: colors.text }, heading: { height: 56, marginTop: 10, paddingHorizontal: 28, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }, headingText: { fontSize: 15, fontWeight: '700' }, more: { fontSize: 12, color: colors.muted }, row: { flexDirection: 'row', gap: 9, paddingHorizontal: 24 }, grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 9, rowGap: 20, paddingHorizontal: 24 }, empty: { textAlign: 'center', color: colors.muted, fontSize: 13, marginTop: 30 } });
