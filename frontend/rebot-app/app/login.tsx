@@ -6,7 +6,7 @@ import { PrimaryButton } from '@/src/components/PrimaryButton';
 import { colors } from '@/src/theme/tokens';
 
 export default function LoginScreen() {
-  return <Screen contentStyle={styles.screen}>
+  return <Screen scroll contentStyle={styles.screen}>
     <View style={styles.hero}><Text style={styles.title}>안녕하세요{`\n`}다시 만나서 반가워요 !👋</Text><Text style={styles.subtitle}>오늘은 어떤 새로운 경험이 기다릴까?</Text></View>
     <View style={styles.form}><View style={styles.line}><TextInput style={styles.input} defaultValue="design@nave l" /><Ionicons name="close-circle" size={19} color="#8D8D96" /></View><View style={[styles.line, styles.mutedLine]}><TextInput style={styles.input} placeholder="비밀번호를 입력하세요" placeholderTextColor="#9CA4AB" secureTextEntry /><Ionicons name="eye-off-outline" size={20} color="#9CA4AB" /></View><View style={styles.options}><Text style={styles.option}>☑  로그인 상태 유지</Text><Text style={styles.option}>비밀번호 찾기</Text></View></View>
     <PrimaryButton label="로그인" onPress={() => router.replace('/(tabs)/home')} />

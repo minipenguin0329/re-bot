@@ -14,7 +14,7 @@ export default function ProfileScreen() {
 
   const handleLogout = () => Alert.alert('로그아웃', '로그아웃 하시겠어요?', [{ text: '취소', style: 'cancel' }, { text: '로그아웃', style: 'destructive', onPress: () => router.replace('/login') }]);
 
-  return <Screen><AppHeader title="마이페이지" /><View style={styles.body}>
+  return <Screen bottomSafe={false}><AppHeader title="마이페이지" /><View style={styles.body}>
     <View style={styles.profile}>
       <View style={styles.avatar}>{photoUri ? <Image source={{ uri: photoUri }} style={styles.avatarImage} /> : <Ionicons name="person" size={34} color="#9A9A9F" />}</View>
       <View><Text style={styles.name}>{name}</Text><Text style={styles.copy}>{bio}</Text></View>

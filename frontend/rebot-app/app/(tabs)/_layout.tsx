@@ -1,4 +1,4 @@
-import { Ionicons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '@/src/theme/tokens';
@@ -6,10 +6,10 @@ import { colors } from '@/src/theme/tokens';
 const TAB_CONTENT_HEIGHT = 54;
 
 const tabs = [
-  { name: 'home', active: 'home', inactive: 'home-outline' },
-  { name: 'diagnosis', active: 'analytics', inactive: 'analytics-outline' },
-  { name: 'solution', active: 'bulb', inactive: 'bulb-outline' },
-  { name: 'profile', active: 'person', inactive: 'person-outline' },
+  { name: 'home', active: 'home-variant', inactive: 'home-variant-outline' },
+  { name: 'diagnosis', active: 'checkbox-marked', inactive: 'checkbox-marked-outline' },
+  { name: 'solution', active: 'lightbulb-on-outline', inactive: 'lightbulb-outline' },
+  { name: 'profile', active: 'account', inactive: 'account-outline' },
 ] as const;
 
 export default function TabLayout() {
@@ -36,9 +36,9 @@ export default function TabLayout() {
           key={name}
           name={name}
           options={{
-            tabBarStyle: name === 'solution' ? { display: 'none' } : tabBarStyle,
+            tabBarStyle: name === 'solution' || name === 'diagnosis' ? { display: 'none' } : tabBarStyle,
             tabBarIcon: ({ focused, color }) => (
-              <Ionicons name={focused ? active : inactive} size={29} color={color} />
+              <MaterialCommunityIcons name={focused ? active : inactive} size={28} color={color} />
             ),
           }}
         />
