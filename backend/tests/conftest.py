@@ -9,8 +9,8 @@ from uuid import UUID, uuid4
 import pytest
 from fastapi.testclient import TestClient
 
+from app.api.dependencies import get_database_client
 from app.core.security import CurrentUser, get_current_user
-from app.db.supabase import get_supabase_client
 from app.main import app
 from app.schemas.analysis import CauseAnalysisResult, CauseCandidate
 from app.schemas.recommendation import RecommendationResult
@@ -240,7 +240,7 @@ def authenticated_client(fake_db: FakeDatabase) -> Iterator[TestClient]:
     app.dependency_overrides[get_current_user] = lambda: CurrentUser(
         id=USER_A, email="a@example.com"
     )
-    app.dependency_overrides[get_supabase_client] = lambda: fake_db
+    app.dependency_overrides[get_database_client] = lambda: fake_db
     app.dependency_overrides[get_openai_service] = lambda: FakeOpenAIService()
     with TestClient(app) as client:
         yield client

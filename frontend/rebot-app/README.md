@@ -65,3 +65,22 @@ fix: 솔루션 화면 이동 오류 수정
 - 샘플 웰니스 데이터
 
 실제 로그인, 데이터베이스, 이미지 업로드, OpenAI API 및 상품 API 연결은 포함하지 않습니다.
+
+## 백엔드·Supabase 연동
+
+`.env.example`을 `.env`로 복사해서 공개 연결 값을 사용합니다. Expo 앱의 클라이언트 환경
+변수는 `EXPO_PUBLIC_` 접두사를 사용합니다.
+
+```env
+EXPO_PUBLIC_SUPABASE_URL=https://jdhassvacgsgkisvtcxi.supabase.co
+EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_HGYc1tEOdKw1KmJS5UaHdQ_v79Dd-VY
+EXPO_PUBLIC_API_BASE_URL=http://localhost:8000
+```
+
+- 프론트는 Supabase Auth로 로그인하고 세션을 유지합니다.
+- 개인 데이터와 이미지, OpenAI 기능은 FastAPI를 통해 사용합니다.
+- 인증 API 요청에는 `Authorization: Bearer SUPABASE_ACCESS_TOKEN`을 전달합니다.
+- 연결 확인 API는 `GET /api/me`, 전체 명세는 백엔드 `/docs`에서 확인합니다.
+- 실제 DB 타입은 `src/types/database.types.ts`에 있습니다.
+
+`service_role` 키와 OpenAI API 키는 앱에 넣지 않습니다.

@@ -1,3 +1,4 @@
+from typing import Annotated
 from uuid import UUID
 
 from fastapi import Depends
@@ -15,15 +16,21 @@ class CurrentUser(BaseModel):
     email: str | None = None
 
 
-async def get_current_user(
+def get_access_token(
     credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
-) -> CurrentUser:
+) -> str:
     if credentials is None or credentials.scheme.lower() != "bearer":
         raise AppError("AUTH_REQUIRED", "로그인이 필요합니다.", status_code=401)
+    return credentials.credentials
 
+
+AccessToken = Annotated[str, Depends(get_access_token)]
+
+
+async def get_current_user(access_token: AccessToken) -> CurrentUser:
     try:
         client = get_supabase_client()
-        auth_response = client.auth.get_user(credentials.credentials)
+        auth_response = client.auth.get_user(access_token)
         auth_user = auth_response.user
     except Exception as exc:
         raise AppError(

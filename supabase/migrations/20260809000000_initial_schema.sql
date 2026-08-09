@@ -150,20 +150,12 @@ create index if not exists analyses_user_created_idx
   on public.analyses (user_id, created_at desc);
 create index if not exists analyses_symptom_idx
   on public.analyses (symptom_id);
-create index if not exists analyses_selected_candidate_idx
-  on public.analyses (selected_candidate_id);
 create index if not exists analysis_candidates_analysis_rank_idx
   on public.analysis_candidates (analysis_id, rank);
 create index if not exists recommendations_user_created_idx
   on public.recommendations (user_id, created_at desc);
-create index if not exists recommendations_analysis_idx
-  on public.recommendations (analysis_id);
-create index if not exists recommendations_candidate_idx
-  on public.recommendations (candidate_id);
 create index if not exists recommendation_feedback_user_created_idx
   on public.recommendation_feedback (user_id, created_at desc);
-create index if not exists recommendation_feedback_recommendation_idx
-  on public.recommendation_feedback (recommendation_id);
 create index if not exists reports_user_period_idx
   on public.reports (user_id, period_type, period_start desc);
 create index if not exists products_active_category_idx
@@ -217,44 +209,37 @@ begin
 end $$;
 
 create policy profiles_own_rows on public.profiles
-  for all to authenticated
-  using ((select auth.uid()) = id) with check ((select auth.uid()) = id);
+  for all using (auth.uid() = id) with check (auth.uid() = id);
 create policy daily_logs_own_rows on public.daily_logs
-  for all to authenticated
-  using ((select auth.uid()) = user_id) with check ((select auth.uid()) = user_id);
+  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 create policy symptoms_own_rows on public.symptoms
-  for all to authenticated
-  using ((select auth.uid()) = user_id) with check ((select auth.uid()) = user_id);
+  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 create policy analyses_own_rows on public.analyses
-  for all to authenticated
-  using ((select auth.uid()) = user_id) with check ((select auth.uid()) = user_id);
+  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 create policy analysis_candidates_own_rows on public.analysis_candidates
-  for all to authenticated using (
+  for all using (
     exists (
       select 1 from public.analyses
       where analyses.id = analysis_candidates.analysis_id
-        and analyses.user_id = (select auth.uid())
+        and analyses.user_id = auth.uid()
     )
   ) with check (
     exists (
       select 1 from public.analyses
       where analyses.id = analysis_candidates.analysis_id
-        and analyses.user_id = (select auth.uid())
+        and analyses.user_id = auth.uid()
     )
   );
 create policy recommendations_own_rows on public.recommendations
-  for all to authenticated
-  using ((select auth.uid()) = user_id) with check ((select auth.uid()) = user_id);
+  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 create policy recommendation_feedback_own_rows on public.recommendation_feedback
-  for all to authenticated
-  using ((select auth.uid()) = user_id) with check ((select auth.uid()) = user_id);
+  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 create policy reports_own_rows on public.reports
-  for all to authenticated
-  using ((select auth.uid()) = user_id) with check ((select auth.uid()) = user_id);
+  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 create policy products_read_active on public.products
   for select using (active = true);
 
--- Private image bucket. Request-scoped user clients perform RLS-protected uploads.
+-- Private image bucket. The backend service-role client performs uploads.
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values (
   'wellness-images',
@@ -267,28 +252,3 @@ on conflict (id) do update set
   public = excluded.public,
   file_size_limit = excluded.file_size_limit,
   allowed_mime_types = excluded.allowed_mime_types;
-
-drop policy if exists wellness_images_insert_own on storage.objects;
-drop policy if exists wellness_images_select_own on storage.objects;
-drop policy if exists wellness_images_delete_own on storage.objects;
-
-create policy wellness_images_insert_own on storage.objects
-  for insert to authenticated
-  with check (
-    bucket_id = 'wellness-images'
-    and (storage.foldername(name))[1] = (select auth.uid()::text)
-  );
-
-create policy wellness_images_select_own on storage.objects
-  for select to authenticated
-  using (
-    bucket_id = 'wellness-images'
-    and (storage.foldername(name))[1] = (select auth.uid()::text)
-  );
-
-create policy wellness_images_delete_own on storage.objects
-  for delete to authenticated
-  using (
-    bucket_id = 'wellness-images'
-    and (storage.foldername(name))[1] = (select auth.uid()::text)
-  );

@@ -38,13 +38,13 @@ Copy-Item .env.example .env
 | `OPENAI_API_KEY` | 백엔드 전용 OpenAI API 키 |
 | `OPENAI_MODEL` | Responses API에서 사용할 모델 ID |
 | `SUPABASE_URL` | Supabase 프로젝트 URL |
-| `SUPABASE_ANON_KEY` | Supabase 공개 anon 키 |
-| `SUPABASE_SERVICE_ROLE_KEY` | 백엔드 전용 service-role 키 |
+| `SUPABASE_PUBLISHABLE_KEY` | Supabase 공개 publishable 키 |
 | `ALLOWED_ORIGINS` | 쉼표로 구분한 프론트엔드 origin |
 | `ENVIRONMENT` | `development` 또는 배포 환경 이름 |
 | `MAX_IMAGE_SIZE_MB` | 이미지 최대 크기, 기본 5MB |
 
-`SUPABASE_SERVICE_ROLE_KEY`와 `OPENAI_API_KEY`는 절대 프론트엔드로 전달하지 않습니다.
+`OPENAI_API_KEY`는 절대 프론트엔드로 전달하지 않습니다. 백엔드는 사용자 Access Token으로
+Supabase를 호출하므로 service-role 키를 요구하지 않습니다.
 
 ## 4. Supabase 준비
 
@@ -54,8 +54,8 @@ Copy-Item .env.example .env
 4. SQL이 생성한 `wellness-images` 버킷이 private인지 확인합니다.
 
 스키마는 테이블, 제약조건, 외래키, 인덱스, RLS 정책과 비공개 Storage 버킷을
-함께 생성합니다. 백엔드는 service-role 키를 사용하므로 모든 repository 쿼리에도
-인증된 `user_id` ownership 조건을 별도로 넣었습니다.
+함께 생성합니다. 백엔드의 DB와 Storage 요청에도 사용자 JWT의 RLS가 적용되며, 모든
+repository 쿼리에는 인증된 `user_id` ownership 조건을 별도로 넣었습니다.
 
 ## 5. OpenAI 연결 확인
 
@@ -175,4 +175,3 @@ pytest
 - `app/core`: 환경설정, 인증, 통일 오류 처리
 - `sql/schema.sql`: Supabase용 전체 SQL
 - `tests`: API와 서비스 Mock 테스트
-
