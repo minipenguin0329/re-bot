@@ -1,10 +1,53 @@
 import { router } from 'expo-router';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useEffect } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors } from '@/src/theme/tokens';
+
+const SPLASH_DURATION = 1050;
 
 export default function SplashScreen() {
-  return <SafeAreaView style={styles.screen}><Pressable style={styles.center} onPress={() => router.replace('/login')}><View style={styles.logo}><Text style={styles.re}>Re</Text><Text style={styles.colon}>:</Text><Text style={styles.bot}>Bot</Text></View><Text style={styles.hint}>화면을 눌러 시작하기</Text></Pressable></SafeAreaView>;
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      router.replace('/login');
+    }, SPLASH_DURATION);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  return (
+    <SafeAreaView style={styles.screen}>
+      <View style={styles.logo} accessibilityLabel="리봇">
+        <Text style={styles.word}>Re</Text>
+        <Text style={styles.colon}>:</Text>
+        <Text style={styles.word}>Bot</Text>
+      </View>
+    </SafeAreaView>
+  );
 }
 
-const styles = StyleSheet.create({ screen: { flex: 1, backgroundColor: colors.white }, center: { flex: 1, alignItems: 'center', justifyContent: 'center' }, logo: { flexDirection: 'row', alignItems: 'baseline' }, re: { fontSize: 68, fontWeight: '800' }, colon: { fontSize: 68, fontWeight: '800', color: colors.accent }, bot: { fontSize: 68, fontWeight: '800' }, hint: { position: 'absolute', bottom: 40, color: colors.subtle, fontSize: 13 } });
+const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFDF5',
+  },
+  logo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  word: {
+    fontSize: 42,
+    lineHeight: 50,
+    fontWeight: '800',
+    letterSpacing: -1.4,
+    color: '#050505',
+  },
+  colon: {
+    marginHorizontal: 3,
+    fontSize: 42,
+    lineHeight: 50,
+    fontWeight: '800',
+    color: '#F6D663',
+  },
+});
