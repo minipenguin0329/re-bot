@@ -26,4 +26,4 @@ export default function ProfileSurveyScreen() {
   </View></Screen>;
 }
 
-const styles = StyleSheet.create({ body: { flex: 1, paddingHorizontal: 24, paddingTop: 28 }, label: { fontSize: 15, fontWeight: '600', margin: 8 }, input: { height: 60, backgroundColor: colors.surfaceStrong, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border, paddingHorizontal: 20, fontSize: 14 }, sleepBlock: { marginTop: 30 }, button: { marginTop: 'auto', marginBottom: 50 } });
+const styles = StyleSheet.create({ body: { flex: 1, paddingHorizontal: 24, paddingTop: 28, paddingBottom: 16 }, label: { fontSize: 15, fontWeight: '600', margin: 8 }, input: { height: 60, backgroundColor: colors.surfaceStrong, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border, paddingHorizontal: 20, fontSize: 14 }, sleepBlock: { marginTop: 30 }, button: { marginTop: 'auto' } });

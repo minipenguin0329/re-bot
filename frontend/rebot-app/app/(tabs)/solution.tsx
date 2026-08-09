@@ -1,20 +1,17 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { StyleSheet, Text, TextInput, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppHeader } from '@/src/components/AppHeader';
 import { PrimaryButton } from '@/src/components/PrimaryButton';
 import { Screen } from '@/src/components/Screen';
 import { colors } from '@/src/theme/tokens';
 
 export default function SolutionScreen() {
-  const insets = useSafeAreaInsets();
-
   return (
     <Screen>
       <AppHeader title="AI 솔루션" back />
-      <View style={[styles.body, { paddingBottom: Math.max(48, insets.bottom + 16) }]}>
-        <View>
+      <View style={styles.body}>
+        <View style={styles.intro}>
           <Text style={styles.title}>고민되는 상황을 입력해주세요</Text>
           <Text style={styles.subtitle}>AI가 상황을 분석하고 최선의 선택을 제안해드릴게요</Text>
         </View>
@@ -29,12 +26,14 @@ export default function SolutionScreen() {
           />
         </View>
 
+        <View style={styles.flexGap} />
         <View style={styles.tip}>
           <View style={styles.tipIcon}>
             <Ionicons name="bulb-outline" size={28} color="#969696" />
           </View>
           <Text style={styles.tipText}>구체적으로 입력할수록{`\n`}더 정확한 제안을 받을 수 있어요.</Text>
         </View>
+        <View style={styles.bottomGap} />
         <PrimaryButton
           label="물어보기"
           onPress={() => router.push('/solution/suggestion')}
@@ -49,9 +48,10 @@ const styles = StyleSheet.create({
   body: {
     flex: 1,
     paddingHorizontal: 24,
-    paddingTop: 24,
-    paddingBottom: 48,
+    paddingTop: 28,
+    paddingBottom: 16,
   },
+  intro: { flexShrink: 0 },
   title: {
     marginHorizontal: 8,
     fontSize: 20,
@@ -67,8 +67,10 @@ const styles = StyleSheet.create({
     color: '#9B9B9B',
   },
   inputCard: {
-    height: 318,
-    marginTop: 28,
+    flex: 1,
+    minHeight: 180,
+    maxHeight: 318,
+    marginTop: 24,
     paddingHorizontal: 16,
     paddingVertical: 18,
     borderWidth: 1,
@@ -85,7 +87,7 @@ const styles = StyleSheet.create({
   },
   tip: {
     height: 78,
-    marginTop: 56,
+    flexShrink: 0,
     paddingHorizontal: 38,
     flexDirection: 'row',
     alignItems: 'center',
@@ -94,6 +96,8 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     backgroundColor: '#FFF8DC',
   },
+  flexGap: { flex: 1, minHeight: 12, maxHeight: 56 },
+  bottomGap: { flex: 1, minHeight: 12, maxHeight: 56 },
   tipIcon: {
     width: 32,
     height: 40,
@@ -108,7 +112,7 @@ const styles = StyleSheet.create({
   },
   button: {
     height: 60,
-    marginTop: 56,
+    flexShrink: 0,
     borderRadius: 16,
   },
 });

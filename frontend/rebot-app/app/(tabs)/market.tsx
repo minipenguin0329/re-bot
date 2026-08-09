@@ -16,7 +16,7 @@ export default function MarketScreen() {
   const popular = products.filter((product) => product.category === 'popular');
   const searchResults = useMemo(() => products.filter((product) => product.name.includes(query.trim())), [query]);
 
-  return <Screen scroll><AppHeader title="마켓" leftIcon="menu" rightIcon="cart-outline" onRightPress={() => router.push('/market/cart')} />
+  return <Screen scroll bottomSafe={false}><AppHeader title="마켓" leftIcon="menu" rightIcon="cart-outline" onRightPress={() => router.push('/market/cart')} />
     <View style={styles.body}>
       <View style={styles.search}><Ionicons name="search" size={22} color="#AAA" /><TextInput value={query} onChangeText={setQuery} placeholder="제품을 검색해보세요" placeholderTextColor="#AAA" style={styles.searchInput} />{query.length > 0 && <Pressable onPress={() => setQuery('')}><Ionicons name="close-circle" size={19} color="#AAA" /></Pressable>}</View>
       {totalCount > 0 && <Pressable style={styles.cartHint} onPress={() => router.push('/market/cart')}><Text style={styles.cartHintText}>장바구니에 담긴 상품 {totalCount}개</Text><Ionicons name="chevron-forward" size={16} color={colors.muted} /></Pressable>}
