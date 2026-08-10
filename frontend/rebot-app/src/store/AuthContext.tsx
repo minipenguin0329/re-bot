@@ -1,4 +1,5 @@
 import type { Session, User } from '@supabase/supabase-js';
+import * as Linking from 'expo-linking';
 import { createContext, PropsWithChildren, useContext, useEffect, useMemo, useState } from 'react';
 import { AppState, Platform } from 'react-native';
 
@@ -12,6 +13,9 @@ type AuthContextValue = {
   signUp: (email: string, password: string, nickname: string) => Promise<{ needsEmailConfirmation: boolean }>;
   signOut: () => Promise<void>;
   updateAccount: (payload: { email?: string; password?: string }) => Promise<void>;
+  resendConfirmation: (email: string) => Promise<void>;
+  requestPasswordReset: (email: string) => Promise<void>;
+  verifyRecoveryToken: (tokenHash: string) => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -72,6 +76,20 @@ export function AuthProvider({ children }: PropsWithChildren) {
     },
     updateAccount: async (payload) => {
       const { error } = await supabase.auth.updateUser(payload);
+      if (error) throw error;
+    },
+    resendConfirmation: async (email) => {
+      const { error } = await supabase.auth.resend({ type: 'signup', email });
+      if (error) throw error;
+    },
+    requestPasswordReset: async (email) => {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: Linking.createURL('/reset-password'),
+      });
+      if (error) throw error;
+    },
+    verifyRecoveryToken: async (tokenHash) => {
+      const { error } = await supabase.auth.verifyOtp({ type: 'recovery', token_hash: tokenHash });
       if (error) throw error;
     },
   }), [loading, session]);

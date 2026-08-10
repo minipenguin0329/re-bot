@@ -30,9 +30,7 @@ export default function SignupScreen() {
       const result = await signUp(trimmedEmail, password, trimmedName);
       updateProfile({ name: trimmedName, email: trimmedEmail });
       if (result.needsEmailConfirmation) {
-        Alert.alert('이메일 확인 필요', '가입 확인 메일의 링크를 누른 뒤 로그인해주세요.', [
-          { text: '확인', onPress: () => router.replace('/login') },
-        ]);
+        router.replace({ pathname: '/verify-email', params: { email: trimmedEmail } });
       } else {
         router.replace('/onboarding/basic');
       }
