@@ -1,12 +1,32 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { StyleSheet, Text, TextInput, View } from 'react-native';
+import { useState } from 'react';
+import { Alert, StyleSheet, Text, TextInput, View } from 'react-native';
 import { AppHeader } from '@/src/components/AppHeader';
 import { PrimaryButton } from '@/src/components/PrimaryButton';
 import { Screen } from '@/src/components/Screen';
+import { getErrorMessage } from '@/src/services/api';
+import { useWellness } from '@/src/store/WellnessContext';
 import { colors } from '@/src/theme/tokens';
 
 export default function SolutionScreen() {
+  const { requestKnownCauseSolution } = useWellness();
+  const [situation, setSituation] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async () => {
+    const value = situation.trim();
+    if (value.length < 2) return Alert.alert('입력 확인', '상황을 조금 더 자세히 입력해주세요.');
+    setLoading(true);
+    try {
+      await requestKnownCauseSolution(value);
+      router.push('/solution/suggestion');
+    } catch (error) {
+      Alert.alert('제안 생성 실패', getErrorMessage(error));
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
     <Screen>
       <AppHeader title="AI 솔루션" back />
@@ -23,6 +43,9 @@ export default function SolutionScreen() {
             placeholder="예) 회식 때문에 술을 마셔야 하는데 내일 아침 개운하게 일어나고 싶어요."
             placeholderTextColor="#A2A2A2"
             style={styles.input}
+            value={situation}
+            onChangeText={setSituation}
+            maxLength={1000}
           />
         </View>
 
@@ -36,7 +59,8 @@ export default function SolutionScreen() {
         <View style={styles.bottomGap} />
         <PrimaryButton
           label="물어보기"
-          onPress={() => router.push('/solution/suggestion')}
+          onPress={() => void handleSubmit()}
+          loading={loading}
           style={styles.button}
         />
       </View>

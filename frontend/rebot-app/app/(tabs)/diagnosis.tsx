@@ -8,9 +8,11 @@ import { AppHeader } from '@/src/components/AppHeader';
 import { FormField } from '@/src/components/FormField';
 import { PrimaryButton } from '@/src/components/PrimaryButton';
 import { Screen } from '@/src/components/Screen';
+import { useWellness } from '@/src/store/WellnessContext';
 import { colors, radius } from '@/src/theme/tokens';
 
 export default function DiagnosisScreen() {
+  const { prepareDiagnosis } = useWellness();
   const [symptom, setSymptom] = useState('');
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [hadBefore, setHadBefore] = useState(false);
@@ -29,6 +31,16 @@ export default function DiagnosisScreen() {
     }
   };
 
+  const handleAnalyze = () => {
+    const description = symptom.trim();
+    if (description.length < 2) {
+      Alert.alert('입력 확인', '증상을 조금 더 자세히 입력해주세요.');
+      return;
+    }
+    prepareDiagnosis({ description, isRepeated: hadBefore, photoUri });
+    router.push('/diagnosis/loading');
+  };
+
   return <Screen scroll><AppHeader title="AI 자가진단" back /><View style={styles.body}>
     <Text style={styles.label}>문제 상황을 설명해주세요</Text>
     <FormField multiline placeholder="어떤 증상인지 자세히 입력해주세요" value={symptom} onChangeText={setSymptom} />
@@ -43,7 +55,7 @@ export default function DiagnosisScreen() {
       <View style={[styles.box, hadBefore && styles.boxChecked]}>{hadBefore && <Ionicons name="checkmark" size={14} color={colors.white} />}</View>
       <Text style={styles.checkText}>전에도 동일한 증상이 있었나요?</Text>
     </Pressable>
-    <PrimaryButton label="분석하기" onPress={() => router.push('/diagnosis/loading')} style={styles.button} />
+    <PrimaryButton label="분석하기" onPress={handleAnalyze} style={styles.button} />
   </View>
   {isPickingPhoto && <View pointerEvents="auto" style={styles.photoPickerOverlay}><ActivityIndicator size="small" color="#8F8F8F" /></View>}
   </Screen>;

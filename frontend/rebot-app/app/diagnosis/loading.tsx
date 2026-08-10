@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Animated, {
   cancelAnimation,
@@ -13,6 +13,9 @@ import Animated, {
 } from 'react-native-reanimated';
 import Svg, { Circle, ClipPath, Defs, G, LinearGradient, Path, Stop } from 'react-native-svg';
 import { Screen } from '@/src/components/Screen';
+import { PrimaryButton } from '@/src/components/PrimaryButton';
+import { getErrorMessage } from '@/src/services/api';
+import { useWellness } from '@/src/store/WellnessContext';
 import { colors } from '@/src/theme/tokens';
 
 const SHAPE_SIZE = 108;
@@ -53,8 +56,24 @@ function morphValue(low: number, mid: number, full: number, progress: number) {
 }
 
 export default function LoadingScreen() {
+  const { diagnosisDraft, runPreparedDiagnosis } = useWellness();
   const progress = useSharedValue(0);
   const reduceMotion = useReducedMotion();
+  const started = useRef(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const runAnalysis = async () => {
+    setError(null);
+    try {
+      await Promise.all([
+        runPreparedDiagnosis(),
+        new Promise((resolve) => setTimeout(resolve, 3230)),
+      ]);
+      router.replace('/diagnosis/candidates');
+    } catch (caught) {
+      setError(getErrorMessage(caught));
+    }
+  };
 
   useEffect(() => {
     if (!reduceMotion) {
@@ -71,12 +90,20 @@ export default function LoadingScreen() {
       progress.value = 0;
     }
 
-    const navigationTimer = setTimeout(() => router.replace('/diagnosis/candidates'), 3230);
     return () => {
-      clearTimeout(navigationTimer);
       cancelAnimation(progress);
     };
   }, [progress, reduceMotion]);
+
+  useEffect(() => {
+    if (started.current) return;
+    started.current = true;
+    if (!diagnosisDraft) {
+      setError('분석할 증상 정보가 없습니다.');
+      return;
+    }
+    void runAnalysis();
+  }, [diagnosisDraft]);
 
   const frontProps = useAnimatedProps(() => ({
     d: morphPath(FRONT_LOW, FRONT_MID, FRONT_FULL, progress.value),
@@ -125,6 +152,11 @@ export default function LoadingScreen() {
           </G>
         </Svg>
       </View>
+      {error && <View style={styles.errorArea}>
+        <Text style={styles.errorText}>{error}</Text>
+        <PrimaryButton label="다시 시도" onPress={() => void runAnalysis()} style={styles.retryButton} />
+        <PrimaryButton label="입력 화면으로" variant="outline" onPress={() => router.replace('/(tabs)/diagnosis')} style={styles.retryButton} />
+      </View>}
     </Screen>
   );
 }
@@ -135,4 +167,7 @@ const styles = StyleSheet.create({
   title: { fontSize: 16, lineHeight: 24, fontWeight: '700', color: colors.text },
   copy: { marginTop: 7, fontSize: 11, lineHeight: 17, color: '#A5A5A5' },
   loaderArea: { position: 'absolute', top: '45%', width: SHAPE_SIZE, height: SHAPE_SIZE },
+  errorArea: { position: 'absolute', left: 24, right: 24, bottom: 36, gap: 10 },
+  errorText: { textAlign: 'center', color: colors.muted, fontSize: 13, lineHeight: 20 },
+  retryButton: { height: 52 },
 });

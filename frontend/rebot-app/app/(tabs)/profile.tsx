@@ -4,15 +4,25 @@ import { router } from 'expo-router';
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import { AppHeader } from '@/src/components/AppHeader';
 import { Screen } from '@/src/components/Screen';
+import { getErrorMessage } from '@/src/services/api';
+import { useAuth } from '@/src/store/AuthContext';
 import { useProfile } from '@/src/store/ProfileContext';
 import { colors } from '@/src/theme/tokens';
 
 const menus = [{ label: '회원정보 수정', icon: 'person-outline', route: '/profile/edit' }, { label: 'AI 건강 리포트', icon: 'document-text-outline', route: '/profile/report' }, { label: '알림 설정', icon: 'notifications-outline', route: '/profile/notifications' }, { label: '고객센터', icon: 'help-circle-outline', route: '/profile/support' }] as const;
 
 export default function ProfileScreen() {
+  const { signOut } = useAuth();
   const { name, bio, photoUri } = useProfile();
 
-  const handleLogout = () => Alert.alert('로그아웃', '로그아웃 하시겠어요?', [{ text: '취소', style: 'cancel' }, { text: '로그아웃', style: 'destructive', onPress: () => router.replace('/login') }]);
+  const handleLogout = () => Alert.alert('로그아웃', '로그아웃 하시겠어요?', [{ text: '취소', style: 'cancel' }, { text: '로그아웃', style: 'destructive', onPress: async () => {
+    try {
+      await signOut();
+      router.replace('/login');
+    } catch (error) {
+      Alert.alert('로그아웃 실패', getErrorMessage(error));
+    }
+  } }]);
 
   return <Screen bottomSafe={false}><AppHeader title="마이페이지" /><View style={styles.body}>
     <View style={styles.profile}>

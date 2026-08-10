@@ -163,6 +163,7 @@ export type Database = {
           id: string
           image_url: string | null
           name: string
+          price_krw: number | null
           purchase_url: string | null
           tags: Json
         }
@@ -174,6 +175,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           name: string
+          price_krw?: number | null
           purchase_url?: string | null
           tags?: Json
         }
@@ -185,6 +187,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           name?: string
+          price_krw?: number | null
           purchase_url?: string | null
           tags?: Json
         }
