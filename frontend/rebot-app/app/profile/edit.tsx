@@ -10,11 +10,14 @@ import { PrimaryButton } from '@/src/components/PrimaryButton';
 import { Screen } from '@/src/components/Screen';
 import { WheelPicker } from '@/src/components/WheelPicker';
 import { SLEEP_OPTIONS } from '@/src/data/onboarding';
+import { getErrorMessage } from '@/src/services/api';
+import { useAuth } from '@/src/store/AuthContext';
 import { useProfile } from '@/src/store/ProfileContext';
 import { colors } from '@/src/theme/tokens';
 
 export default function EditProfileScreen() {
-  const { name, bio, photoUri, email, job, sleepHours, updateProfile } = useProfile();
+  const { updateAccount } = useAuth();
+  const { name, bio, photoUri, email, job, sleepHours, updateProfile, persistProfile } = useProfile();
   const [draftName, setDraftName] = useState(name);
   const [draftBio, setDraftBio] = useState(bio);
   const [draftPhoto, setDraftPhoto] = useState(photoUri);
@@ -22,6 +25,7 @@ export default function EditProfileScreen() {
   const [draftPassword, setDraftPassword] = useState('');
   const [draftJob, setDraftJob] = useState(job);
   const [draftSleepHours, setDraftSleepHours] = useState<string>(sleepHours || SLEEP_OPTIONS[1]);
+  const [loading, setLoading] = useState(false);
 
   const handlePickPhoto = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -30,17 +34,33 @@ export default function EditProfileScreen() {
     if (!result.canceled) setDraftPhoto(result.assets[0].uri);
   };
 
-  const handleSave = () => {
-    updateProfile({
+  const handleSave = async () => {
+    const values = {
       name: draftName.trim() || name,
       bio: draftBio.trim(),
       photoUri: draftPhoto,
       email: draftEmail.trim(),
       job: draftJob.trim(),
       sleepHours: draftSleepHours,
-      ...(draftPassword ? { password: draftPassword } : {}),
-    });
-    router.back();
+    };
+    setLoading(true);
+    try {
+      if (values.email !== email || draftPassword) {
+        await updateAccount({
+          ...(values.email !== email ? { email: values.email } : {}),
+          ...(draftPassword ? { password: draftPassword } : {}),
+        });
+      }
+      updateProfile(values);
+      await persistProfile(values);
+      Alert.alert('저장 완료', values.email !== email ? '프로필을 저장했어요. 이메일 변경 확인 메일이 발송될 수 있어요.' : '프로필을 저장했어요.', [
+        { text: '확인', onPress: () => router.back() },
+      ]);
+    } catch (error) {
+      Alert.alert('저장 실패', getErrorMessage(error));
+    } finally {
+      setLoading(false);
+    }
   };
 
   return <Screen scroll><AppHeader title="회원정보 수정" back /><View style={styles.body}>
@@ -59,8 +79,9 @@ export default function EditProfileScreen() {
       <WheelPicker items={SLEEP_OPTIONS} initialIndex={SLEEP_OPTIONS.indexOf(draftSleepHours as (typeof SLEEP_OPTIONS)[number])} pillWidth={200} onChange={(_, value) => setDraftSleepHours(value as string)} />
     </View>
 
-    <PrimaryButton label="저장" onPress={handleSave} style={styles.button} />
+    <Text style={styles.localNotice}>프로필 사진과 한줄 소개는 현재 기기에만 표시돼요.</Text>
+    <PrimaryButton label="저장" onPress={handleSave} loading={loading} style={styles.button} />
   </View></Screen>;
 }
 
-const styles = StyleSheet.create({ body: { flex: 1, paddingHorizontal: 24, paddingTop: 24, gap: 20, paddingBottom: 40 }, avatarWrap: { alignSelf: 'center', marginBottom: 12 }, avatar: { width: 96, height: 96, borderRadius: 48, backgroundColor: colors.surfaceStrong, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }, avatarImage: { width: 96, height: 96 }, editBadge: { position: 'absolute', right: 0, bottom: 0, width: 30, height: 30, borderRadius: 15, backgroundColor: colors.black, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: colors.white }, block: { gap: 8 }, label: { fontSize: 14, color: colors.muted, marginLeft: 8 }, button: { marginTop: 12 } });
+const styles = StyleSheet.create({ body: { flex: 1, paddingHorizontal: 24, paddingTop: 24, gap: 20, paddingBottom: 40 }, avatarWrap: { alignSelf: 'center', marginBottom: 12 }, avatar: { width: 96, height: 96, borderRadius: 48, backgroundColor: colors.surfaceStrong, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }, avatarImage: { width: 96, height: 96 }, editBadge: { position: 'absolute', right: 0, bottom: 0, width: 30, height: 30, borderRadius: 15, backgroundColor: colors.black, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: colors.white }, block: { gap: 8 }, label: { fontSize: 14, color: colors.muted, marginLeft: 8 }, localNotice: { fontSize: 11, lineHeight: 17, color: colors.muted, textAlign: 'center' }, button: { marginTop: 12 } });

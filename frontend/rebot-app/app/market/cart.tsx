@@ -4,40 +4,38 @@ import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import { AppHeader } from '@/src/components/AppHeader';
 import { PrimaryButton } from '@/src/components/PrimaryButton';
 import { Screen } from '@/src/components/Screen';
-import { products } from '@/src/data/products';
 import { useCart } from '@/src/store/CartContext';
 import { colors } from '@/src/theme/tokens';
 
 export default function CartScreen() {
-  const { items, updateQty, removeItem, totalPrice } = useCart();
+  const { items, updateQty, removeItem, clearCart, totalPrice } = useCart();
 
-  const handleCheckout = () => Alert.alert('주문 완료', '주문이 접수되었습니다. (데모)', [{ text: '확인', onPress: () => router.back() }]);
+  const handleCheckout = () => Alert.alert('데모 장바구니', '결제 API는 아직 연결되지 않았어요. 상품 선택 흐름만 확인할 수 있습니다.', [{ text: '장바구니 비우기', style: 'destructive', onPress: () => { clearCart(); router.back(); } }, { text: '닫기', style: 'cancel' }]);
 
   if (items.length === 0) return <Screen><AppHeader title="장바구니" back /><View style={styles.emptyBody}><Ionicons name="cart-outline" size={48} color={colors.subtle} /><Text style={styles.emptyText}>장바구니가 비어있어요</Text></View></Screen>;
 
   return <Screen scroll><AppHeader title="장바구니" back />
     <View style={styles.body}>
       {items.map((item) => {
-        const product = products.find((candidate) => candidate.id === item.productId);
-        if (!product) return null;
-        return <View key={item.productId} style={styles.row}>
+        const product = item.product;
+        return <View key={product.id} style={styles.row}>
           <View style={[styles.thumb, { backgroundColor: product.color }]}><Ionicons name="leaf-outline" size={26} color="#777" /></View>
           <View style={styles.info}>
             <Text style={styles.name}>{product.name}</Text>
             <Text style={styles.price}>{(product.price * item.qty).toLocaleString()}원</Text>
             <View style={styles.qtyRow}>
-              <Pressable style={styles.qtyButton} onPress={() => updateQty(item.productId, item.qty - 1)}><Ionicons name="remove" size={16} color={colors.text} /></Pressable>
+              <Pressable style={styles.qtyButton} onPress={() => updateQty(product.id, item.qty - 1)}><Ionicons name="remove" size={16} color={colors.text} /></Pressable>
               <Text style={styles.qty}>{item.qty}</Text>
-              <Pressable style={styles.qtyButton} onPress={() => updateQty(item.productId, item.qty + 1)}><Ionicons name="add" size={16} color={colors.text} /></Pressable>
+              <Pressable style={styles.qtyButton} onPress={() => updateQty(product.id, item.qty + 1)}><Ionicons name="add" size={16} color={colors.text} /></Pressable>
             </View>
           </View>
-          <Pressable hitSlop={10} onPress={() => removeItem(item.productId)}><Ionicons name="close" size={20} color={colors.muted} /></Pressable>
+          <Pressable hitSlop={10} onPress={() => removeItem(product.id)}><Ionicons name="close" size={20} color={colors.muted} /></Pressable>
         </View>;
       })}
     </View>
     <View style={styles.footer}>
       <View style={styles.totalRow}><Text style={styles.totalLabel}>총 결제금액</Text><Text style={styles.totalValue}>{totalPrice.toLocaleString()}원</Text></View>
-      <PrimaryButton label="주문하기" onPress={handleCheckout} />
+      <PrimaryButton label="결제 흐름 확인 (데모)" onPress={handleCheckout} />
     </View>
   </Screen>;
 }

@@ -8,9 +8,11 @@ import { AppHeader } from '@/src/components/AppHeader';
 import { FormField } from '@/src/components/FormField';
 import { PrimaryButton } from '@/src/components/PrimaryButton';
 import { Screen } from '@/src/components/Screen';
+import { useWellness } from '@/src/store/WellnessContext';
 import { colors, radius } from '@/src/theme/tokens';
 
 export default function DiagnosisScreen() {
+  const { prepareDiagnosis } = useWellness();
   const [symptom, setSymptom] = useState('');
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [hadBefore, setHadBefore] = useState(false);
@@ -20,6 +22,16 @@ export default function DiagnosisScreen() {
     if (!permission.granted) return Alert.alert('권한 필요', '사진을 첨부하려면 사진 접근 권한이 필요해요.');
     const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsEditing: true, aspect: [1, 1], quality: 0.8 });
     if (!result.canceled) setPhotoUri(result.assets[0].uri);
+  };
+
+  const handleAnalyze = () => {
+    const description = symptom.trim();
+    if (description.length < 3) {
+      Alert.alert('입력 확인', '증상을 3자 이상 자세히 입력해주세요.');
+      return;
+    }
+    prepareDiagnosis({ description, isRepeated: hadBefore, photoUri });
+    router.push('/diagnosis/loading');
   };
 
   return <Screen scroll><AppHeader title="AI 자가진단" back /><View style={styles.body}>
@@ -36,7 +48,7 @@ export default function DiagnosisScreen() {
       <View style={[styles.box, hadBefore && styles.boxChecked]}>{hadBefore && <Ionicons name="checkmark" size={14} color={colors.white} />}</View>
       <Text style={styles.checkText}>전에도 동일한 증상이 있었나요?</Text>
     </Pressable>
-    <PrimaryButton label="분석하기" onPress={() => router.push('/diagnosis/loading')} style={styles.button} />
+    <PrimaryButton label="분석하기" onPress={handleAnalyze} style={styles.button} />
   </View></Screen>;
 }
 

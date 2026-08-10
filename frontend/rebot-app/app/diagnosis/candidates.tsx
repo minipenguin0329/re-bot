@@ -1,55 +1,48 @@
-import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, StyleSheet, Text, View } from 'react-native';
+
 import { AppHeader } from '@/src/components/AppHeader';
 import { ChoiceCard } from '@/src/components/ChoiceCard';
+import { PrimaryButton } from '@/src/components/PrimaryButton';
 import { Screen } from '@/src/components/Screen';
+import { getErrorMessage } from '@/src/services/api';
+import { useWellness } from '@/src/store/WellnessContext';
 import { colors } from '@/src/theme/tokens';
 
-const candidates = [
-  ['수면 부족', '부족한 수면은 피부 건강에 영향을 줄 수 있어요.'],
-  ['스트레스 증가', '스트레스가 지속되면 호르몬 변화로 피부 상태에 영향을 줄 수 있어요.'],
-  ['호르몬 변화', '호르몬 균형 변화가 피지 분비 증가와 관련될 수 있어요.'],
-  ['식습관 불균형', '불규칙한 식사나 자극적인 음식 섭취가 피부 상태에 영향을 줄 수 있어요.'],
-  ['흡연', '흡연이 피부 건강과 회복에 영향을 줄 수 있어요.'],
-  ['생활 리듬 변화', '불규칙한 생활이 피부 상태에 영향을 줄 수 있어요.'],
-  ['피부 관리 부족', '세안 습관이나 피부 관리 방법이 피부 상태에 영향을 줄 수 있어요.'],
-  ['마스크, 외부 자극', '마스크 착용이나 마찰 등 외부 자극이 피부 트러블을 유발할 수 있어요.'],
-  ['수분 부족', '피부 수분이 부족하면 유수분 균형이 무너져 트러블이 생길 수 있어요.'],
-] as const;
-
-const PAGE_SIZE = 3;
-const PAGE_COUNT = Math.ceil(candidates.length / PAGE_SIZE);
-
 export default function CandidatesScreen() {
-  const [page, setPage] = useState(0);
-  const [selected, setSelected] = useState<number[]>([]);
-  const toggle = (index: number) => setSelected((current) => current.includes(index) ? current.filter((value) => value !== index) : [...current, index]);
+  const { analysis, chooseCandidate } = useWellness();
+  const [selected, setSelected] = useState<string | 'none' | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  const handleNext = () => {
-    if (page < PAGE_COUNT - 1) setPage((current) => current + 1);
-    else router.push('/diagnosis/result');
+  const handleNext = async () => {
+    if (!selected) {
+      Alert.alert('선택 확인', '가장 가까운 후보를 하나 선택하거나 해당 없음을 선택해주세요.');
+      return;
+    }
+    setLoading(true);
+    try {
+      await chooseCandidate(selected === 'none' ? null : selected);
+      router.push('/diagnosis/result');
+    } catch (error) {
+      Alert.alert('추천 생성 실패', getErrorMessage(error));
+    } finally {
+      setLoading(false);
+    }
   };
-  const handlePrev = () => setPage((current) => Math.max(0, current - 1));
 
-  const pageCandidates = candidates.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE);
+  if (!analysis) {
+    return <Screen><AppHeader title="AI 자가진단" back /><View style={styles.missing}><Text style={styles.copy}>분석 결과가 없습니다.</Text><PrimaryButton label="다시 입력하기" onPress={() => router.replace('/(tabs)/diagnosis')} /></View></Screen>;
+  }
 
-  return <Screen><AppHeader title="AI 자가진단" back /><View style={styles.body}>
-    <Text style={styles.title}>유력 후보</Text>
-    <Text style={styles.copy}>해당되는 항목을 모두 선택해주세요</Text>
-    <View style={styles.cards}>{pageCandidates.map(([title, description], indexInPage) => {
-      const index = page * PAGE_SIZE + indexInPage;
-      return <ChoiceCard key={title} number={index + 1} title={title} description={description} selected={selected.includes(index)} onPress={() => toggle(index)} />;
-    })}</View>
-    <View style={styles.footer}>
-      <View style={[styles.nav, page === 0 && styles.navEnd]}>
-        {page > 0 && <Pressable style={styles.navButton} onPress={handlePrev}><Ionicons name="chevron-back" size={18} color={colors.text} /><Text style={styles.navText}>이전</Text></Pressable>}
-        <Pressable style={styles.navButton} onPress={handleNext}><Text style={styles.navText}>다음</Text><Ionicons name="chevron-forward" size={18} color={colors.text} /></Pressable>
-      </View>
-      <Text style={styles.page}>{page + 1}/{PAGE_COUNT}</Text>
+  return <Screen scroll><AppHeader title="AI 자가진단" back /><View style={styles.body}>
+    <Text style={styles.title}>가능한 원인 후보</Text>
+    <Text style={styles.copy}>AI가 정리한 후보 중 가장 가까운 항목 하나를 선택해주세요.</Text>
+    <View style={styles.cards}>{analysis.candidates.map((candidate, index) => <ChoiceCard key={candidate.id} number={index + 1} title={candidate.title} description={candidate.reason} selected={selected === candidate.id} onPress={() => setSelected(candidate.id)} />)}
+      <ChoiceCard title="해당되는 후보가 없어요" description="현재 후보를 선택하지 않고 일반적인 행동 제안을 받아볼게요." selected={selected === 'none'} onPress={() => setSelected('none')} />
     </View>
+    <PrimaryButton label="행동 추천 받기" onPress={handleNext} loading={loading} style={styles.button} />
   </View></Screen>;
 }
 
-const styles = StyleSheet.create({ body: { flex: 1, paddingHorizontal: 24, paddingTop: 4 }, title: { fontSize: 20, fontWeight: '800', marginTop: 4 }, copy: { fontSize: 14, color: colors.muted, marginTop: 8 }, cards: { marginTop: 32, gap: 24 }, footer: { marginTop: 'auto', marginBottom: 24, alignItems: 'center', gap: 4 }, nav: { flexDirection: 'row', justifyContent: 'space-between', width: '100%' }, navEnd: { justifyContent: 'flex-end' }, navButton: { flexDirection: 'row', alignItems: 'center', gap: 2 }, navText: { fontSize: 16, fontWeight: '700', color: colors.text }, page: { fontSize: 13, color: colors.muted } });
+const styles = StyleSheet.create({ body: { flex: 1, paddingHorizontal: 24, paddingTop: 4, paddingBottom: 30 }, title: { fontSize: 20, fontWeight: '800', marginTop: 4 }, copy: { fontSize: 14, color: colors.muted, marginTop: 8, lineHeight: 21 }, cards: { marginTop: 26, gap: 16 }, button: { marginTop: 28 }, missing: { flex: 1, justifyContent: 'center', paddingHorizontal: 24, gap: 24 } });

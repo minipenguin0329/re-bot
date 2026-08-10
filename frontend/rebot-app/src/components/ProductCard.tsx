@@ -9,11 +9,11 @@ export function ProductCard({ product }: { product: Product }) {
   return <View style={styles.product}>
     <View style={[styles.image, { backgroundColor: product.color }]}>
       <Ionicons name="leaf-outline" size={34} color="#777" />
-      <Pressable hitSlop={8} style={({ pressed }) => [styles.add, pressed && styles.addPressed]} onPress={() => addItem(product.id)}><Ionicons name="add" size={16} color={colors.white} /></Pressable>
+      <Pressable hitSlop={8} style={({ pressed }) => [styles.add, pressed && styles.addPressed]} onPress={() => addItem(product)}><Ionicons name="add" size={16} color={colors.white} /></Pressable>
     </View>
     <Text style={styles.tag}>{product.tag}</Text>
     <Text style={styles.name} numberOfLines={2}>{product.name}</Text>
-    <Text style={styles.price}>{product.price.toLocaleString()}원</Text>
+    <Text style={styles.price}>{product.price > 0 ? `${product.price.toLocaleString()}원` : '가격 정보 없음'}</Text>
   </View>;
 }
 

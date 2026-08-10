@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { AppHeader } from '@/src/components/AppHeader';
 import { PrimaryButton } from '@/src/components/PrimaryButton';
 import { Screen } from '@/src/components/Screen';
@@ -18,6 +18,10 @@ export default function BasicSurveyScreen() {
   const [birthYear, setBirthYear] = useState(BIRTH_YEARS[DEFAULT_YEAR_INDEX]);
 
   const handleNext = () => {
+    if (!gender) {
+      Alert.alert('입력 확인', '성별을 선택해주세요.');
+      return;
+    }
     updateProfile({ job: job.trim(), gender, birthYear });
     router.push('/onboarding/profile');
   };
