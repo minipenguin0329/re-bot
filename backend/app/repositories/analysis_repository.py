@@ -63,6 +63,23 @@ class AnalysisRepository:
         )
         return first_or_none(rows)
 
+    def list(self, user_id: UUID, limit: int = 30) -> list[dict[str, Any]]:
+        return execute_query(
+            self.client.table("analyses")
+            .select("*")
+            .eq("user_id", str(user_id))
+            .order("created_at", desc=True)
+            .limit(limit)
+        )
+
+    def list_candidates(self, analysis_id: UUID) -> list[dict[str, Any]]:
+        return execute_query(
+            self.client.table("analysis_candidates")
+            .select("*")
+            .eq("analysis_id", str(analysis_id))
+            .order("rank", desc=False)
+        )
+
     def get_candidate(
         self, analysis_id: UUID, candidate_id: UUID
     ) -> dict[str, Any] | None:

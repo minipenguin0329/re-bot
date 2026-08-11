@@ -1,6 +1,7 @@
 import { supabase } from '@/src/lib/supabase';
 import { Platform } from 'react-native';
 import type {
+  AnalysisHistoryItem,
   AnalysisResponse,
   DailyLogPayload,
   DailyLogResponse,
@@ -137,6 +138,8 @@ export const backendApi = {
       method: 'POST',
       ...jsonBody({ symptom_id: symptomId }),
     }),
+  listAnalyses: () => request<AnalysisHistoryItem[]>('/api/analysis'),
+  getAnalysis: (analysisId: string) => request<AnalysisResponse>(`/api/analysis/${analysisId}`),
   selectCandidate: (analysisId: string, candidateId: string | null) =>
     request<{ analysis_id: string; selection_status: 'candidate' | 'none'; selected_candidate_id: string | null }>(
       `/api/analysis/${analysisId}/select`,

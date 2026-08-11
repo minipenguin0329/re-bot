@@ -10,7 +10,7 @@ from app.repositories.log_repository import LogRepository
 from app.repositories.profile_repository import ProfileRepository
 from app.repositories.recommendation_repository import RecommendationRepository
 from app.repositories.symptom_repository import SymptomRepository
-from app.schemas.analysis import AnalysisResponse, CauseAnalysisResult
+from app.schemas.analysis import AnalysisHistoryItem, AnalysisResponse, CauseAnalysisResult
 from app.services.openai_service import OpenAIService
 
 
@@ -107,6 +107,40 @@ class AnalysisService:
 
         analysis["status"] = "completed"
         analysis["candidates"] = candidates
+        return AnalysisResponse.model_validate(analysis)
+
+    def list_history(self, user_id: UUID) -> list[AnalysisHistoryItem]:
+        repository = AnalysisRepository(self.client)
+        symptom_repo = SymptomRepository(self.client)
+        recommendation_repo = RecommendationRepository(self.client)
+
+        items: list[AnalysisHistoryItem] = []
+        for analysis in repository.list(user_id):
+            symptom = symptom_repo.get(user_id, UUID(str(analysis["symptom_id"])))
+            recommendation = recommendation_repo.get_latest_by_analysis(
+                user_id, UUID(str(analysis["id"]))
+            )
+            items.append(
+                AnalysisHistoryItem(
+                    id=analysis["id"],
+                    symptom_id=analysis["symptom_id"],
+                    symptom_description=symptom["description"] if symptom else "",
+                    status=analysis["status"],
+                    selection_status=analysis["selection_status"],
+                    recommendation_action=(
+                        recommendation["action"] if recommendation else None
+                    ),
+                    created_at=analysis["created_at"],
+                )
+            )
+        return items
+
+    def get_detail(self, user_id: UUID, analysis_id: UUID) -> AnalysisResponse:
+        repository = AnalysisRepository(self.client)
+        analysis = repository.get(user_id, analysis_id)
+        if analysis is None:
+            raise AppError("RESOURCE_NOT_FOUND", "분석 기록을 찾을 수 없습니다.", 404)
+        analysis = {**analysis, "candidates": repository.list_candidates(analysis_id)}
         return AnalysisResponse.model_validate(analysis)
 
     def select_candidate(
