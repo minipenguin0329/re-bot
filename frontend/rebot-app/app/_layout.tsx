@@ -25,6 +25,7 @@ function AppNavigator() {
       <Stack.Screen name="index" />
       <Stack.Screen name="login" />
       <Stack.Screen name="signup" />
+      <Stack.Screen name="auth/callback" />
     </Stack.Protected>
     <Stack.Protected guard={Boolean(session)}>
       <Stack.Screen name="(tabs)" />
