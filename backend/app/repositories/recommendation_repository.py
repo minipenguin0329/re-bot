@@ -31,6 +31,19 @@ class RecommendationRepository:
         )
         return rows[0]
 
+    def get_latest_by_analysis(
+        self, user_id: UUID, analysis_id: UUID
+    ) -> dict[str, Any] | None:
+        rows = execute_query(
+            self.client.table("recommendations")
+            .select("*")
+            .eq("user_id", str(user_id))
+            .eq("analysis_id", str(analysis_id))
+            .order("created_at", desc=True)
+            .limit(1)
+        )
+        return first_or_none(rows)
+
     def get(self, user_id: UUID, recommendation_id: UUID) -> dict[str, Any] | None:
         rows = execute_query(
             self.client.table("recommendations")

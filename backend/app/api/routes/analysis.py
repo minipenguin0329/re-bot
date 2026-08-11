@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, status
 from app.api.dependencies import AuthenticatedUser, DatabaseClient
 from app.schemas.analysis import (
     AnalysisCreate,
+    AnalysisHistoryItem,
     AnalysisResponse,
     CandidateSelectionRequest,
     CandidateSelectionResponse,
@@ -27,6 +28,25 @@ async def create_analysis(
     return await AnalysisService(client, openai_service).analyze(
         user.id, payload.symptom_id
     )
+
+
+@router.get("", response_model=list[AnalysisHistoryItem])
+async def list_analyses(
+    user: AuthenticatedUser,
+    client: DatabaseClient,
+    openai_service: OpenAIServiceDependency,
+) -> list[AnalysisHistoryItem]:
+    return AnalysisService(client, openai_service).list_history(user.id)
+
+
+@router.get("/{analysis_id}", response_model=AnalysisResponse)
+async def get_analysis(
+    analysis_id: UUID,
+    user: AuthenticatedUser,
+    client: DatabaseClient,
+    openai_service: OpenAIServiceDependency,
+) -> AnalysisResponse:
+    return AnalysisService(client, openai_service).get_detail(user.id, analysis_id)
 
 
 @router.post("/{analysis_id}/select", response_model=CandidateSelectionResponse)

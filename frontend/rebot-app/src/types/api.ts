@@ -71,6 +71,16 @@ export type AnalysisResponse = {
   candidates: AnalysisCandidate[];
 };
 
+export type AnalysisHistoryItem = {
+  id: string;
+  symptom_id: string;
+  symptom_description: string;
+  status: 'pending' | 'completed' | 'failed';
+  selection_status: 'unselected' | 'candidate' | 'none';
+  recommendation_action: string | null;
+  created_at: string;
+};
+
 export type RecommendationResponse = {
   id: string;
   user_id: string;

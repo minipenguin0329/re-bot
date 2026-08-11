@@ -102,6 +102,8 @@ Supabase Auth로 검증하고 사용자 ID를 결정합니다.
 | GET/DELETE | `/api/symptoms/{id}` | 본인 증상 조회/삭제 |
 | POST | `/api/symptoms/{id}/image` | 이미지 업로드 (`multipart/form-data`) |
 | POST | `/api/analysis` | 생활 기록 기반 원인 후보 최대 3개 생성 |
+| GET | `/api/analysis` | 본인 자가진단 이력 목록 |
+| GET | `/api/analysis/{id}` | 본인 자가진단 상세 (후보 포함) |
 | POST | `/api/analysis/{id}/select` | 후보 선택 또는 `candidate_id: null` |
 | POST | `/api/recommendations` | 선택 결과에 맞춘 작은 행동 생성 |
 | POST | `/api/recommendations/{id}/feedback` | positive/negative 피드백 저장 |

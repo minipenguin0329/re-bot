@@ -52,3 +52,13 @@ class CandidateSelectionResponse(BaseModel):
     selection_status: Literal["candidate", "none"]
     selected_candidate_id: UUID | None = None
 
+
+class AnalysisHistoryItem(BaseModel):
+    id: UUID
+    symptom_id: UUID
+    symptom_description: str
+    status: Literal["pending", "completed", "failed"]
+    selection_status: Literal["unselected", "candidate", "none"]
+    recommendation_action: str | None = None
+    created_at: datetime
+

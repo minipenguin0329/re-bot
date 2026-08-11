@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { AppHeader } from '@/src/components/AppHeader';
@@ -45,7 +46,7 @@ export default function HomeScreen() {
             <View style={styles.copyArea}>
               <Text style={styles.cardTitle}>어제 발생한 두통, 지금은 어떠신가요?</Text>
               <Text style={styles.cardCopy}>현재 상태를 확인해볼게요.</Text>
-              <Pressable hitSlop={10}>
+              <Pressable hitSlop={10} onPress={() => router.push('/history')}>
                 <Text style={styles.cardLink}>답변하러가기</Text>
               </Pressable>
             </View>
