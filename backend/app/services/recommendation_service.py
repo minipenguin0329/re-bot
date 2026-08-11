@@ -26,21 +26,19 @@ class RecommendationService:
         if analysis.get("selection_status") == "unselected":
             raise AppError("VALIDATION_ERROR", "먼저 원인 후보를 선택해주세요.", 409)
 
-        candidate_id = analysis.get("selected_candidate_id")
-        candidate = (
-            analysis_repo.get_candidate(analysis_id, UUID(str(candidate_id)))
-            if candidate_id
-            else None
-        )
+        selected_candidates = analysis_repo.get_selected_candidates(analysis_id)
         symptom = SymptomRepository(self.client).get(
             user_id, UUID(str(analysis["symptom_id"]))
         )
         candidate_context = (
-            {
-                key: candidate.get(key)
-                for key in ("title", "reason", "evidence", "confirmation_question")
-            }
-            if candidate
+            [
+                {
+                    key: candidate.get(key)
+                    for key in ("title", "reason", "evidence", "confirmation_question")
+                }
+                for candidate in selected_candidates
+            ]
+            if selected_candidates
             else "none_of_the_candidates"
         )
         recent_logs = LogRepository(self.client).list(user_id, days=14)
@@ -54,7 +52,7 @@ class RecommendationService:
             "meal_note",
         )
         context: dict[str, object] = {
-            "selected_candidate": candidate_context,
+            "selected_candidates": candidate_context,
             "current_discomfort_category": symptom.get("category") if symptom else None,
             "job": (ProfileRepository(self.client).get(user_id) or {}).get("job"),
             "recent_daily_logs": [
@@ -65,10 +63,15 @@ class RecommendationService:
             ).list_recent_feedback(user_id),
         }
         result = await self.openai_service.create_recommendation(context)
+        single_candidate_id = (
+            UUID(str(selected_candidates[0]["id"]))
+            if len(selected_candidates) == 1
+            else None
+        )
         row = RecommendationRepository(self.client).create(
             user_id,
             analysis_id,
-            UUID(str(candidate_id)) if candidate_id else None,
+            single_candidate_id,
             result.model_dump(),
         )
         return RecommendationResponse.model_validate(row)

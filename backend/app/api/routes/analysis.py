@@ -57,12 +57,12 @@ async def select_candidate(
     client: DatabaseClient,
     openai_service: OpenAIServiceDependency,
 ) -> CandidateSelectionResponse:
-    row = AnalysisService(client, openai_service).select_candidate(
-        user.id, analysis_id, payload.candidate_id
+    row = AnalysisService(client, openai_service).select_candidates(
+        user.id, analysis_id, payload.candidate_ids
     )
     return CandidateSelectionResponse(
         analysis_id=analysis_id,
         selection_status=row["selection_status"],
-        selected_candidate_id=row.get("selected_candidate_id"),
+        selected_candidate_ids=payload.candidate_ids,
     )
 

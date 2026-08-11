@@ -143,8 +143,8 @@ class AnalysisService:
         analysis = {**analysis, "candidates": repository.list_candidates(analysis_id)}
         return AnalysisResponse.model_validate(analysis)
 
-    def select_candidate(
-        self, user_id: UUID, analysis_id: UUID, candidate_id: UUID | None
+    def select_candidates(
+        self, user_id: UUID, analysis_id: UUID, candidate_ids: list[UUID]
     ) -> dict[str, Any]:
         repository = AnalysisRepository(self.client)
         analysis = repository.get(user_id, analysis_id)
@@ -152,11 +152,12 @@ class AnalysisService:
             raise AppError("RESOURCE_NOT_FOUND", "분석 기록을 찾을 수 없습니다.", 404)
         if analysis.get("status") != "completed":
             raise AppError("VALIDATION_ERROR", "완료된 분석에서만 후보를 선택할 수 있습니다.", 409)
-        if candidate_id and repository.get_candidate(analysis_id, candidate_id) is None:
-            raise AppError(
-                "RESOURCE_FORBIDDEN", "이 분석에 속하지 않은 후보입니다.", 403
-            )
-        updated = repository.select_candidate(user_id, analysis_id, candidate_id)
+        for candidate_id in candidate_ids:
+            if repository.get_candidate(analysis_id, candidate_id) is None:
+                raise AppError(
+                    "RESOURCE_FORBIDDEN", "이 분석에 속하지 않은 후보입니다.", 403
+                )
+        updated = repository.select_candidates(user_id, analysis_id, candidate_ids)
         if updated is None:
             raise AppError("RESOURCE_NOT_FOUND", "분석 기록을 찾을 수 없습니다.", 404)
         return updated

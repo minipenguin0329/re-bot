@@ -140,10 +140,10 @@ export const backendApi = {
     }),
   listAnalyses: () => request<AnalysisHistoryItem[]>('/api/analysis'),
   getAnalysis: (analysisId: string) => request<AnalysisResponse>(`/api/analysis/${analysisId}`),
-  selectCandidate: (analysisId: string, candidateId: string | null) =>
-    request<{ analysis_id: string; selection_status: 'candidate' | 'none'; selected_candidate_id: string | null }>(
+  selectCandidates: (analysisId: string, candidateIds: string[]) =>
+    request<{ analysis_id: string; selection_status: 'candidate' | 'none'; selected_candidate_ids: string[] }>(
       `/api/analysis/${analysisId}/select`,
-      { method: 'POST', ...jsonBody({ candidate_id: candidateId }) },
+      { method: 'POST', ...jsonBody({ candidate_ids: candidateIds }) },
     ),
   createRecommendation: (analysisId: string) =>
     request<RecommendationResponse>('/api/recommendations', {

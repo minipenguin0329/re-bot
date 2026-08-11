@@ -24,7 +24,6 @@ class AnalysisRepository:
                     "status": "pending",
                     "model_name": model_name,
                     "selection_status": "unselected",
-                    "selected_candidate_id": None,
                 }
             )
         )
@@ -92,21 +91,38 @@ class AnalysisRepository:
         )
         return first_or_none(rows)
 
-    def select_candidate(
+    def select_candidates(
         self,
         user_id: UUID,
         analysis_id: UUID,
-        candidate_id: UUID | None,
+        candidate_ids: list[UUID],
     ) -> dict[str, Any] | None:
-        values = {
-            "selection_status": "candidate" if candidate_id else "none",
-            "selected_candidate_id": str(candidate_id) if candidate_id else None,
-        }
+        execute_query(
+            self.client.table("analysis_candidates")
+            .update({"selected": False})
+            .eq("analysis_id", str(analysis_id))
+        )
+        if candidate_ids:
+            execute_query(
+                self.client.table("analysis_candidates")
+                .update({"selected": True})
+                .eq("analysis_id", str(analysis_id))
+                .in_("id", [str(candidate_id) for candidate_id in candidate_ids])
+            )
         rows = execute_query(
             self.client.table("analyses")
-            .update(values)
+            .update({"selection_status": "candidate" if candidate_ids else "none"})
             .eq("id", str(analysis_id))
             .eq("user_id", str(user_id))
         )
         return first_or_none(rows)
+
+    def get_selected_candidates(self, analysis_id: UUID) -> list[dict[str, Any]]:
+        return execute_query(
+            self.client.table("analysis_candidates")
+            .select("*")
+            .eq("analysis_id", str(analysis_id))
+            .eq("selected", True)
+            .order("rank", desc=False)
+        )
 

@@ -74,6 +74,10 @@ class FakeQuery:
         self.filters.append(("contains", column, value))
         return self
 
+    def in_(self, column: str, values: Any) -> "FakeQuery":
+        self.filters.append(("in", column, values))
+        return self
+
     def order(self, column: str, desc: bool = False) -> "FakeQuery":
         self.ordering = (column, desc)
         return self
@@ -97,6 +101,8 @@ class FakeQuery:
                 return False
             if operator == "contains" and not set(expected).issubset(set(actual or [])):
                 return False
+            if operator == "in" and str(actual) not in {str(item) for item in expected}:
+                return False
         return True
 
     def _new_row(self, values: dict[str, Any]) -> dict[str, Any]:
@@ -111,6 +117,8 @@ class FakeQuery:
         if self.table == "symptoms":
             row.setdefault("is_repeated", False)
             row.setdefault("image_path", None)
+        if self.table == "analysis_candidates":
+            row.setdefault("selected", False)
         return row
 
     def execute(self) -> SimpleNamespace:

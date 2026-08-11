@@ -28,6 +28,7 @@ class AnalysisCandidateResponse(CauseCandidate):
     id: UUID
     analysis_id: UUID
     rank: int = Field(ge=1, le=3)
+    selected: bool = False
     created_at: datetime
 
 
@@ -38,19 +39,18 @@ class AnalysisResponse(BaseModel):
     status: Literal["pending", "completed", "failed"]
     model_name: str
     selection_status: Literal["unselected", "candidate", "none"]
-    selected_candidate_id: UUID | None = None
     created_at: datetime
     candidates: list[AnalysisCandidateResponse]
 
 
 class CandidateSelectionRequest(BaseModel):
-    candidate_id: UUID | None = None
+    candidate_ids: Annotated[list[UUID], Field(default_factory=list, max_length=3)]
 
 
 class CandidateSelectionResponse(BaseModel):
     analysis_id: UUID
     selection_status: Literal["candidate", "none"]
-    selected_candidate_id: UUID | None = None
+    selected_candidate_ids: list[UUID] = []
 
 
 class AnalysisHistoryItem(BaseModel):

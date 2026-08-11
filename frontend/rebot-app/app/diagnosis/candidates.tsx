@@ -11,21 +11,35 @@ import { colors } from '@/src/theme/tokens';
 
 const PAGE_SIZE = 3;
 
+const NONE_ID = 'none';
+
 export default function CandidatesScreen() {
   const { analysis, chooseCandidate } = useWellness();
   const [page, setPage] = useState(0);
-  const [selected, setSelected] = useState<string | null | 'none'>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
   const available = analysis?.candidates ?? [];
-  const items = [...available, { id: 'none', title: '해당 없음', reason: '제시된 원인 후보 중 해당하는 항목이 없어요.' }];
+  const items = [...available, { id: NONE_ID, title: '해당 없음', reason: '제시된 원인 후보 중 해당하는 항목이 없어요.' }];
   const pageCount = Math.max(1, Math.ceil(items.length / PAGE_SIZE));
+
+  const toggleSelected = (id: string) => {
+    setSelected((current) => {
+      if (id === NONE_ID) return current.has(NONE_ID) ? new Set() : new Set([NONE_ID]);
+      const next = new Set(current);
+      next.delete(NONE_ID);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   const handleNext = async () => {
     if (page < pageCount - 1) return setPage((current) => current + 1);
-    if (selected === null) return Alert.alert('선택 확인', '가장 가까운 원인 후보 또는 해당 없음을 선택해주세요.');
+    if (selected.size === 0) return Alert.alert('선택 확인', '가장 가까운 원인 후보 또는 해당 없음을 선택해주세요.');
     setLoading(true);
     try {
-      await chooseCandidate(selected === 'none' ? null : selected);
+      const candidateIds = selected.has(NONE_ID) ? [] : Array.from(selected);
+      await chooseCandidate(candidateIds);
       router.push('/diagnosis/result');
     } catch (error) {
       Alert.alert('결과 생성 실패', getErrorMessage(error));
@@ -44,7 +58,7 @@ export default function CandidatesScreen() {
     <Text style={styles.copy}>해당되는 항목을 모두 선택해주세요</Text>
     <View style={styles.cards}>{pageCandidates.map((candidate, indexInPage) => {
       const index = page * PAGE_SIZE + indexInPage;
-      return <ChoiceCard key={candidate.id} number={index + 1} title={candidate.title} description={candidate.reason} selected={selected === candidate.id} onPress={() => setSelected(candidate.id)} />;
+      return <ChoiceCard key={candidate.id} number={index + 1} title={candidate.title} description={candidate.reason} selected={selected.has(candidate.id)} onPress={() => toggleSelected(candidate.id)} />;
     })}</View>
     <View style={styles.footer}>
       <View style={[styles.nav, page === 0 && styles.navEnd]}>

@@ -64,7 +64,6 @@ create table if not exists public.analyses (
   model_name text not null,
   selection_status text not null default 'unselected'
     check (selection_status in ('unselected', 'candidate', 'none')),
-  selected_candidate_id uuid,
   created_at timestamptz not null default timezone('utc', now())
 );
 
@@ -76,22 +75,10 @@ create table if not exists public.analysis_candidates (
   reason text not null,
   evidence jsonb not null default '[]'::jsonb check (jsonb_typeof(evidence) = 'array'),
   confirmation_question text not null,
+  selected boolean not null default false,
   created_at timestamptz not null default timezone('utc', now()),
   unique (analysis_id, rank)
 );
-
-do $$
-begin
-  if not exists (
-    select 1 from pg_constraint where conname = 'analyses_selected_candidate_id_fkey'
-  ) then
-    alter table public.analyses
-      add constraint analyses_selected_candidate_id_fkey
-      foreign key (selected_candidate_id)
-      references public.analysis_candidates(id)
-      on delete set null;
-  end if;
-end $$;
 
 create table if not exists public.recommendations (
   id uuid primary key default gen_random_uuid(),
@@ -154,10 +141,10 @@ create index if not exists analyses_user_created_idx
   on public.analyses (user_id, created_at desc);
 create index if not exists analyses_symptom_idx
   on public.analyses (symptom_id);
-create index if not exists analyses_selected_candidate_idx
-  on public.analyses (selected_candidate_id);
 create index if not exists analysis_candidates_analysis_rank_idx
   on public.analysis_candidates (analysis_id, rank);
+create index if not exists analysis_candidates_selected_idx
+  on public.analysis_candidates (analysis_id) where selected;
 create index if not exists recommendations_user_created_idx
   on public.recommendations (user_id, created_at desc);
 create index if not exists recommendations_analysis_idx

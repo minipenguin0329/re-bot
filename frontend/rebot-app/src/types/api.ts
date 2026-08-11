@@ -56,6 +56,7 @@ export type AnalysisCandidate = {
   reason: string;
   evidence: string[];
   confirmation_question: string;
+  selected: boolean;
   created_at: string;
 };
 
@@ -66,7 +67,6 @@ export type AnalysisResponse = {
   status: 'pending' | 'completed' | 'failed';
   model_name: string;
   selection_status: 'unselected' | 'candidate' | 'none';
-  selected_candidate_id: string | null;
   created_at: string;
   candidates: AnalysisCandidate[];
 };

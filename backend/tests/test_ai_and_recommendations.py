@@ -198,7 +198,6 @@ def test_list_analyses_returns_history_scoped_to_user(
             "status": "completed",
             "model_name": "test-model",
             "selection_status": "candidate",
-            "selected_candidate_id": None,
             "created_at": now,
         },
         {
@@ -208,7 +207,6 @@ def test_list_analyses_returns_history_scoped_to_user(
             "status": "completed",
             "model_name": "test-model",
             "selection_status": "unselected",
-            "selected_candidate_id": None,
             "created_at": now,
         },
     ]
@@ -262,7 +260,6 @@ def test_get_analysis_detail_returns_candidates(
             "status": "completed",
             "model_name": "test-model",
             "selection_status": "unselected",
-            "selected_candidate_id": None,
             "created_at": now,
         }
     ]
@@ -300,7 +297,6 @@ def test_get_analysis_detail_404_for_other_user(
             "status": "completed",
             "model_name": "test-model",
             "selection_status": "unselected",
-            "selected_candidate_id": None,
             "created_at": datetime.now(timezone.utc).isoformat(),
         }
     ]
@@ -308,4 +304,125 @@ def test_get_analysis_detail_404_for_other_user(
     response = authenticated_client.get(f"/api/analysis/{analysis_id}")
 
     assert response.status_code == 404, response.text
+
+
+def _completed_analysis_with_two_candidates(
+    fake_db: FakeDatabase,
+) -> tuple[str, str, str]:
+    now = datetime.now(timezone.utc).isoformat()
+    symptom_id = str(uuid4())
+    analysis_id = str(uuid4())
+    candidate_a_id = str(uuid4())
+    candidate_b_id = str(uuid4())
+    fake_db.tables["symptoms"] = [
+        {
+            "id": symptom_id,
+            "user_id": str(USER_A),
+            "category": "skin",
+            "description": "최근 두통이 있어요.",
+            "is_repeated": False,
+            "image_path": None,
+            "created_at": now,
+        }
+    ]
+    fake_db.tables["analyses"] = [
+        {
+            "id": analysis_id,
+            "user_id": str(USER_A),
+            "symptom_id": symptom_id,
+            "status": "completed",
+            "model_name": "test-model",
+            "selection_status": "unselected",
+            "created_at": now,
+        }
+    ]
+    fake_db.tables["analysis_candidates"] = [
+        {
+            "id": candidate_a_id,
+            "analysis_id": analysis_id,
+            "rank": 1,
+            "title": "수면 부족",
+            "reason": "최근 수면 시간이 짧았어요.",
+            "evidence": ["기록 근거"],
+            "confirmation_question": "최근 잠이 부족했다고 느끼셨나요?",
+            "created_at": now,
+        },
+        {
+            "id": candidate_b_id,
+            "analysis_id": analysis_id,
+            "rank": 2,
+            "title": "카페인 과다 섭취",
+            "reason": "평소보다 커피를 더 마셨어요.",
+            "evidence": ["기록 근거"],
+            "confirmation_question": "카페인 섭취가 늘었나요?",
+            "created_at": now,
+        },
+    ]
+    return analysis_id, candidate_a_id, candidate_b_id
+
+
+def test_select_multiple_candidates(
+    authenticated_client: TestClient, fake_db: FakeDatabase
+) -> None:
+    analysis_id, candidate_a_id, candidate_b_id = _completed_analysis_with_two_candidates(
+        fake_db
+    )
+
+    response = authenticated_client.post(
+        f"/api/analysis/{analysis_id}/select",
+        json={"candidate_ids": [candidate_a_id, candidate_b_id]},
+    )
+
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body["selection_status"] == "candidate"
+    assert set(body["selected_candidate_ids"]) == {candidate_a_id, candidate_b_id}
+    selected_flags = {
+        row["id"]: row["selected"] for row in fake_db.tables["analysis_candidates"]
+    }
+    assert selected_flags[candidate_a_id] is True
+    assert selected_flags[candidate_b_id] is True
+
+
+def test_selecting_none_clears_previous_selection(
+    authenticated_client: TestClient, fake_db: FakeDatabase
+) -> None:
+    analysis_id, candidate_a_id, _ = _completed_analysis_with_two_candidates(fake_db)
+    authenticated_client.post(
+        f"/api/analysis/{analysis_id}/select",
+        json={"candidate_ids": [candidate_a_id]},
+    )
+
+    response = authenticated_client.post(
+        f"/api/analysis/{analysis_id}/select", json={"candidate_ids": []}
+    )
+
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body["selection_status"] == "none"
+    assert body["selected_candidate_ids"] == []
+    assert all(
+        row["selected"] is False for row in fake_db.tables["analysis_candidates"]
+    )
+
+
+def test_recommendation_combines_multiple_selected_candidates(
+    authenticated_client: TestClient, fake_db: FakeDatabase
+) -> None:
+    analysis_id, candidate_a_id, candidate_b_id = _completed_analysis_with_two_candidates(
+        fake_db
+    )
+    authenticated_client.post(
+        f"/api/analysis/{analysis_id}/select",
+        json={"candidate_ids": [candidate_a_id, candidate_b_id]},
+    )
+
+    response = authenticated_client.post(
+        "/api/recommendations", json={"analysis_id": analysis_id}
+    )
+
+    assert response.status_code == 201, response.text
+    body = response.json()
+    assert body["candidate_id"] is None
+    assert body["action"]
 

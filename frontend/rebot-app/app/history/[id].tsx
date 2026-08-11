@@ -52,10 +52,10 @@ export default function HistoryDetailScreen() {
     {description ? <View style={styles.symptomBlock}><Text style={styles.label}>증상</Text><Text style={styles.symptomText}>{description}</Text></View> : null}
 
     <Text style={styles.label}>유력 후보</Text>
-    <View style={styles.cards}>{analysis.candidates.map((candidate) => <View key={candidate.id} style={[styles.candidateCard, candidate.id === analysis.selected_candidate_id && styles.candidateCardSelected]}>
+    <View style={styles.cards}>{analysis.candidates.map((candidate) => <View key={candidate.id} style={[styles.candidateCard, candidate.selected && styles.candidateCardSelected]}>
       <View style={styles.candidateHeader}>
         <Text style={styles.candidateTitle}>{candidate.title}</Text>
-        {candidate.id === analysis.selected_candidate_id && <Ionicons name="checkmark-circle" size={18} color="#8A6B00" />}
+        {candidate.selected && <Ionicons name="checkmark-circle" size={18} color="#8A6B00" />}
       </View>
       <Text
         style={styles.candidateReason}

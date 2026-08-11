@@ -17,7 +17,7 @@ type WellnessContextValue = {
   productConsent: boolean;
   prepareDiagnosis: (draft: DiagnosisDraft) => void;
   runPreparedDiagnosis: () => Promise<AnalysisResponse>;
-  chooseCandidate: (candidateId: string | null) => Promise<RecommendationResponse>;
+  chooseCandidate: (candidateIds: string[]) => Promise<RecommendationResponse>;
   requestKnownCauseSolution: (situation: string) => Promise<RecommendationResponse>;
   sendFeedback: (feedback: 'positive' | 'negative', reason?: string) => Promise<void>;
   requestAlternative: (reason?: string) => Promise<RecommendationResponse>;
@@ -56,9 +56,9 @@ export function WellnessProvider({ children }: PropsWithChildren) {
     return result;
   };
 
-  const chooseCandidate = async (candidateId: string | null) => {
+  const chooseCandidate = async (candidateIds: string[]) => {
     if (!analysis) throw new Error('완료된 분석 정보가 없습니다.');
-    await backendApi.selectCandidate(analysis.id, candidateId);
+    await backendApi.selectCandidates(analysis.id, candidateIds);
     const result = await backendApi.createRecommendation(analysis.id);
     setRecommendation(result);
     return result;
@@ -75,8 +75,8 @@ export function WellnessProvider({ children }: PropsWithChildren) {
     });
     const analysisResult = await backendApi.createAnalysis(symptom.id);
     setAnalysis(analysisResult);
-    const firstCandidateId = analysisResult.candidates[0]?.id ?? null;
-    await backendApi.selectCandidate(analysisResult.id, firstCandidateId);
+    const firstCandidateId = analysisResult.candidates[0]?.id;
+    await backendApi.selectCandidates(analysisResult.id, firstCandidateId ? [firstCandidateId] : []);
     const result = await backendApi.createRecommendation(analysisResult.id);
     setRecommendation(result);
     return result;
