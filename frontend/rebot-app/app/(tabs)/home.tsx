@@ -1,38 +1,42 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { AppHeader } from '@/src/components/AppHeader';
+import { MindMap } from '@/src/components/MindMap';
 import { Screen } from '@/src/components/Screen';
+import { useMindMapCauses } from '@/src/hooks/useMindMapCauses';
+import { useProfile } from '@/src/store/ProfileContext';
 import { colors } from '@/src/theme/tokens';
 
 export default function HomeScreen() {
-  const [visible, setVisible] = useState(true);
+  const { photoUri } = useProfile();
+  const { causes, loading: mindMapLoading } = useMindMapCauses();
+  const [visible, setVisible] = useState(false);
+  const [read, setRead] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
 
-  const archiveFollowUp = () => {
-    setVisible(false);
-    setNotificationsOpen(false);
-  };
+  const dismissCard = () => setVisible(false);
 
-  const openFollowUp = () => {
-    setVisible(true);
+  const goAnswer = () => {
+    setRead(true);
     setNotificationsOpen(false);
+    router.push('/history');
   };
 
   return (
-    <Screen bottomSafe={false}>
+    <Screen bottomSafe={false} scroll>
       <AppHeader
         title="홈화면"
         rightIcon="notifications-outline"
-        rightBadge={!visible}
+        rightBadge={!read}
         onRightPress={() => setNotificationsOpen((current) => !current)}
       />
       {notificationsOpen && (
         <View style={styles.notificationPanel}>
           <Text style={styles.notificationTitle}>알림</Text>
-          <Pressable style={styles.notificationItem} onPress={openFollowUp}>
-            <View style={styles.notificationDot} />
+          <Pressable style={styles.notificationItem} onPress={goAnswer}>
+            {!read && <View style={styles.notificationDot} />}
             <View style={styles.notificationCopyArea}>
               <Text style={styles.notificationItemTitle}>어제 발생한 두통, 지금은 어떠신가요?</Text>
               <Text style={styles.notificationItemCopy}>현재 상태를 확인해 주세요.</Text>
@@ -46,13 +50,24 @@ export default function HomeScreen() {
             <View style={styles.copyArea}>
               <Text style={styles.cardTitle}>어제 발생한 두통, 지금은 어떠신가요?</Text>
               <Text style={styles.cardCopy}>현재 상태를 확인해볼게요.</Text>
-              <Pressable hitSlop={10} onPress={() => router.push('/history')}>
+              <Pressable hitSlop={10} onPress={goAnswer}>
                 <Text style={styles.cardLink}>답변하러가기</Text>
               </Pressable>
             </View>
-            <Pressable style={styles.close} hitSlop={12} onPress={archiveFollowUp}>
+            <Pressable style={styles.close} hitSlop={12} onPress={dismissCard}>
               <Ionicons name="close-outline" size={31} color="#A1A1A1" />
             </Pressable>
+          </View>
+        )}
+        <Text style={styles.mindMapTitle}>원인 마인드맵</Text>
+        <Text style={styles.mindMapCopy}>가지를 눌러 어떤 후보가 있었는지 확인해보세요</Text>
+        {mindMapLoading ? (
+          <View style={styles.mindMapState}><ActivityIndicator color={colors.text} /></View>
+        ) : causes && causes.length > 0 ? (
+          <MindMap photoUri={photoUri} causes={causes} />
+        ) : (
+          <View style={styles.mindMapState}>
+            <Text style={styles.mindMapEmpty}>아직 분석 기록이 없어요.{'\n'}AI 자가진단을 진행하면 원인 마인드맵이 채워져요.</Text>
           </View>
         )}
       </View>
@@ -65,6 +80,30 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 24,
     paddingTop: 38,
+    paddingBottom: 40,
+  },
+  mindMapTitle: {
+    marginTop: 32,
+    fontSize: 17,
+    fontWeight: '800',
+    color: colors.text,
+  },
+  mindMapCopy: {
+    marginTop: 6,
+    marginBottom: 12,
+    fontSize: 12,
+    color: '#A2A2A2',
+  },
+  mindMapState: {
+    height: 220,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  mindMapEmpty: {
+    textAlign: 'center',
+    fontSize: 13,
+    lineHeight: 20,
+    color: colors.muted,
   },
   followUpCard: {
     minHeight: 133,

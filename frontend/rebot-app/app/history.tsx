@@ -50,7 +50,7 @@ export default function HistoryScreen() {
           <Text style={[styles.status, item.status === 'failed' && styles.statusFailed]}>{STATUS_LABEL[item.status]}</Text>
         </View>
         <Text style={styles.description} numberOfLines={2}>{item.symptom_description}</Text>
-        {item.recommendation_action && <View style={styles.recommendationRow}><Ionicons name="checkmark-circle-outline" size={16} color="#8A6B00" /><Text style={styles.recommendation} numberOfLines={1}>{item.recommendation_action}</Text></View>}
+        {item.recommendation_action && <View style={styles.recommendationRow}><Ionicons name="checkmark-circle-outline" size={16} color="#8A6B00" style={styles.recommendationIcon} /><Text style={styles.recommendation} numberOfLines={3}>{item.recommendation_action}</Text></View>}
         <Ionicons name="chevron-forward" size={18} color="#BBB" style={styles.chevron} />
       </Pressable>)}
     </View>
@@ -69,7 +69,8 @@ const styles = StyleSheet.create({
   status: { fontSize: 11, fontWeight: '700', color: '#8A6B00' },
   statusFailed: { color: '#B42318' },
   description: { marginTop: 8, fontSize: 15, fontWeight: '600', lineHeight: 22, color: colors.text },
-  recommendationRow: { marginTop: 10, flexDirection: 'row', alignItems: 'center', gap: 6 },
-  recommendation: { flex: 1, fontSize: 12, color: colors.muted },
+  recommendationRow: { marginTop: 10, flexDirection: 'row', alignItems: 'flex-start', gap: 6 },
+  recommendationIcon: { marginTop: 2 },
+  recommendation: { flex: 1, fontSize: 12, lineHeight: 18, color: colors.muted },
   chevron: { position: 'absolute', right: 14, top: '50%', marginTop: -9 },
 });

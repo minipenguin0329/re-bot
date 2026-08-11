@@ -14,6 +14,16 @@ export default function HistoryDetailScreen() {
   const [analysis, setAnalysis] = useState<AnalysisResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+
+  const toggleExpanded = (candidateId: string) => {
+    setExpandedIds((current) => {
+      const next = new Set(current);
+      if (next.has(candidateId)) next.delete(candidateId);
+      else next.add(candidateId);
+      return next;
+    });
+  };
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -47,7 +57,13 @@ export default function HistoryDetailScreen() {
         <Text style={styles.candidateTitle}>{candidate.title}</Text>
         {candidate.id === analysis.selected_candidate_id && <Ionicons name="checkmark-circle" size={18} color="#8A6B00" />}
       </View>
-      <Text style={styles.candidateReason}>{candidate.reason}</Text>
+      <Text
+        style={styles.candidateReason}
+        numberOfLines={expandedIds.has(candidate.id) ? undefined : 1}
+        onPress={() => toggleExpanded(candidate.id)}
+      >
+        {candidate.reason}
+      </Text>
     </View>)}</View>
     {analysis.candidates.length === 0 && <Text style={styles.empty}>확인된 후보가 없어요.</Text>}
     {analysis.selection_status === 'none' && <Text style={styles.empty}>제시된 후보 중 해당하는 항목이 없다고 선택했어요.</Text>}

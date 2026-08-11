@@ -9,18 +9,6 @@ import { getErrorMessage } from '@/src/services/api';
 import { useWellness } from '@/src/store/WellnessContext';
 import { colors } from '@/src/theme/tokens';
 
-const candidates = [
-  ['수면 부족', '부족한 수면은 피부 건강에 영향을 줄 수 있어요.'],
-  ['스트레스 증가', '스트레스가 지속되면 호르몬 변화로 피부 상태에 영향을 줄 수 있어요.'],
-  ['호르몬 변화', '호르몬 균형 변화가 피지 분비 증가와 관련될 수 있어요.'],
-  ['식습관 불균형', '불규칙한 식사나 자극적인 음식 섭취가 피부 상태에 영향을 줄 수 있어요.'],
-  ['흡연', '흡연이 피부 건강과 회복에 영향을 줄 수 있어요.'],
-  ['생활 리듬 변화', '불규칙한 생활이 피부 상태에 영향을 줄 수 있어요.'],
-  ['피부 관리 부족', '세안 습관이나 피부 관리 방법이 피부 상태에 영향을 줄 수 있어요.'],
-  ['마스크, 외부 자극', '마스크 착용이나 마찰 등 외부 자극이 피부 트러블을 유발할 수 있어요.'],
-  ['수분 부족', '피부 수분이 부족하면 유수분 균형이 무너져 트러블이 생길 수 있어요.'],
-] as const;
-
 const PAGE_SIZE = 3;
 
 export default function CandidatesScreen() {
@@ -51,7 +39,7 @@ export default function CandidatesScreen() {
 
   if (!analysis) return <Screen><View style={styles.missing}><Text style={styles.copy}>완료된 분석 정보가 없습니다.</Text><Pressable onPress={() => router.replace('/(tabs)/diagnosis')}><Text style={styles.navText}>다시 입력하기</Text></Pressable></View></Screen>;
 
-  return <Screen><AppHeader title="AI 자가진단" back /><View style={styles.body}>
+  return <Screen scroll><AppHeader title="AI 자가진단" back /><View style={styles.body}>
     <Text style={styles.title}>유력 후보</Text>
     <Text style={styles.copy}>해당되는 항목을 모두 선택해주세요</Text>
     <View style={styles.cards}>{pageCandidates.map((candidate, indexInPage) => {

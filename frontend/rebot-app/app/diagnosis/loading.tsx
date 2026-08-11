@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Animated, {
   cancelAnimation,
@@ -62,7 +62,7 @@ export default function LoadingScreen() {
   const started = useRef(false);
   const [error, setError] = useState<string | null>(null);
 
-  const runAnalysis = async () => {
+  const runAnalysis = useCallback(async () => {
     setError(null);
     try {
       await Promise.all([
@@ -73,7 +73,7 @@ export default function LoadingScreen() {
     } catch (caught) {
       setError(getErrorMessage(caught));
     }
-  };
+  }, [runPreparedDiagnosis]);
 
   useEffect(() => {
     if (!reduceMotion) {
@@ -103,7 +103,7 @@ export default function LoadingScreen() {
       return;
     }
     void runAnalysis();
-  }, [diagnosisDraft]);
+  }, [diagnosisDraft, runAnalysis]);
 
   const frontProps = useAnimatedProps(() => ({
     d: morphPath(FRONT_LOW, FRONT_MID, FRONT_FULL, progress.value),

@@ -8,8 +8,6 @@ import { AppHeader } from '@/src/components/AppHeader';
 import { FormField } from '@/src/components/FormField';
 import { PrimaryButton } from '@/src/components/PrimaryButton';
 import { Screen } from '@/src/components/Screen';
-import { WheelPicker } from '@/src/components/WheelPicker';
-import { SLEEP_OPTIONS } from '@/src/data/onboarding';
 import { getErrorMessage } from '@/src/services/api';
 import { useAuth } from '@/src/store/AuthContext';
 import { useProfile } from '@/src/store/ProfileContext';
@@ -24,7 +22,10 @@ export default function EditProfileScreen() {
   const [draftEmail, setDraftEmail] = useState(email);
   const [draftPassword, setDraftPassword] = useState('');
   const [draftJob, setDraftJob] = useState(job);
-  const [draftSleepHours, setDraftSleepHours] = useState<string>(sleepHours || SLEEP_OPTIONS[1]);
+  const initialSleepHours = Number.parseFloat(sleepHours);
+  const [draftSleepHours, setDraftSleepHours] = useState<string>(
+    Number.isFinite(initialSleepHours) ? String(initialSleepHours) : '',
+  );
   const [loading, setLoading] = useState(false);
 
   const handlePickPhoto = async () => {
@@ -35,13 +36,20 @@ export default function EditProfileScreen() {
   };
 
   const handleSave = async () => {
+    const trimmedSleepHours = draftSleepHours.trim();
+    if (trimmedSleepHours) {
+      const parsedSleepHours = Number.parseFloat(trimmedSleepHours);
+      if (!Number.isFinite(parsedSleepHours) || parsedSleepHours < 0 || parsedSleepHours > 24) {
+        return Alert.alert('입력 확인', '평소 수면 시간은 0~24 사이의 숫자로 입력해주세요.');
+      }
+    }
     const values = {
       name: draftName.trim() || name,
       bio: draftBio.trim(),
       photoUri: draftPhoto,
       email: draftEmail.trim(),
       job: draftJob.trim(),
-      sleepHours: draftSleepHours,
+      sleepHours: trimmedSleepHours,
     };
     setLoading(true);
     try {
@@ -74,14 +82,11 @@ export default function EditProfileScreen() {
     <FormField label="비밀번호" value={draftPassword} onChangeText={setDraftPassword} placeholder="새 비밀번호로 변경하려면 입력하세요" secureTextEntry />
     <FormField label="직업" value={draftJob} onChangeText={setDraftJob} placeholder="예) 학생, 회사원, 프리랜서 등" />
 
-    <View style={styles.block}>
-      <Text style={styles.label}>평소 수면 시간</Text>
-      <WheelPicker items={SLEEP_OPTIONS} initialIndex={SLEEP_OPTIONS.indexOf(draftSleepHours as (typeof SLEEP_OPTIONS)[number])} pillWidth={200} onChange={(_, value) => setDraftSleepHours(value as string)} />
-    </View>
+    <FormField label="평소 수면 시간 (시간)" value={draftSleepHours} onChangeText={setDraftSleepHours} placeholder="예) 7" keyboardType="decimal-pad" />
 
     <Text style={styles.localNotice}>프로필 사진과 한줄 소개는 현재 기기에만 표시돼요.</Text>
     <PrimaryButton label="저장" onPress={handleSave} loading={loading} style={styles.button} />
   </View></Screen>;
 }
 
-const styles = StyleSheet.create({ body: { flex: 1, paddingHorizontal: 24, paddingTop: 24, gap: 20, paddingBottom: 40 }, avatarWrap: { alignSelf: 'center', marginBottom: 12 }, avatar: { width: 96, height: 96, borderRadius: 48, backgroundColor: colors.surfaceStrong, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }, avatarImage: { width: 96, height: 96 }, editBadge: { position: 'absolute', right: 0, bottom: 0, width: 30, height: 30, borderRadius: 15, backgroundColor: colors.black, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: colors.white }, block: { gap: 8 }, label: { fontSize: 14, color: colors.muted, marginLeft: 8 }, localNotice: { fontSize: 11, lineHeight: 17, color: colors.muted, textAlign: 'center' }, button: { marginTop: 12 } });
+const styles = StyleSheet.create({ body: { flex: 1, paddingHorizontal: 24, paddingTop: 24, gap: 20, paddingBottom: 40 }, avatarWrap: { alignSelf: 'center', marginBottom: 12 }, avatar: { width: 96, height: 96, borderRadius: 48, backgroundColor: colors.surfaceStrong, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }, avatarImage: { width: 96, height: 96 }, editBadge: { position: 'absolute', right: 0, bottom: 0, width: 30, height: 30, borderRadius: 15, backgroundColor: colors.black, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: colors.white }, localNotice: { fontSize: 11, lineHeight: 17, color: colors.muted, textAlign: 'center' }, button: { marginTop: 12 } });

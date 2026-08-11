@@ -1,6 +1,7 @@
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { CartProvider } from '@/src/store/CartContext';
 import { AuthProvider, useAuth } from '@/src/store/AuthContext';
@@ -9,7 +10,7 @@ import { WellnessProvider } from '@/src/store/WellnessContext';
 import { colors } from '@/src/theme/tokens';
 
 export default function RootLayout() {
-  return <AuthProvider><ProfileProvider><WellnessProvider><CartProvider><AppNavigator /></CartProvider></WellnessProvider></ProfileProvider></AuthProvider>;
+  return <GestureHandlerRootView style={styles.root}><AuthProvider><ProfileProvider><WellnessProvider><CartProvider><AppNavigator /></CartProvider></WellnessProvider></ProfileProvider></AuthProvider></GestureHandlerRootView>;
 }
 
 function AppNavigator() {
@@ -47,4 +48,4 @@ function AppNavigator() {
   </Stack></>;
 }
 
-const styles = StyleSheet.create({ loading: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background } });
+const styles = StyleSheet.create({ root: { flex: 1 }, loading: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background } });

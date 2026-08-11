@@ -20,7 +20,6 @@ class Settings(BaseSettings):
     supabase_url: str = ""
     supabase_publishable_key: str = ""
     supabase_anon_key: str = ""
-    supabase_service_role_key: str = ""
     allowed_origins: Annotated[list[str], NoDecode] = Field(default_factory=list)
     environment: str = "development"
     max_image_size_mb: int = Field(default=5, ge=1, le=20)
