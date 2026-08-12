@@ -54,8 +54,8 @@ Supabase를 호출하므로 service-role 키를 요구하지 않습니다.
 4. SQL이 생성한 `wellness-images` 버킷이 private인지 확인합니다.
 
 스키마는 테이블, 제약조건, 외래키, 인덱스, RLS 정책과 비공개 Storage 버킷을
-함께 생성합니다. 백엔드의 DB와 Storage 요청에도 사용자 JWT의 RLS가 적용되며, 모든
-repository 쿼리에는 인증된 `user_id` ownership 조건을 별도로 넣었습니다.
+함께 생성합니다. 백엔드의 DB와 Storage 요청에도 사용자 JWT의 RLS가 적용되며,
+최상위 리소스는 `user_id`, 하위 리소스는 소유한 상위 리소스를 통해 접근을 제한합니다.
 
 ## 5. OpenAI 연결 확인
 
@@ -105,6 +105,8 @@ Supabase Auth로 검증하고 사용자 ID를 결정합니다.
 | GET | `/api/analysis` | 본인 자가진단 이력 목록 |
 | GET | `/api/analysis/{id}` | 본인 자가진단 상세 (후보 포함) |
 | POST | `/api/analysis/{id}/select` | 후보 선택 또는 `candidate_id: null` |
+| GET | `/api/analysis/{id}/chat` | 해당 자가진단의 AI 채팅 메시지 조회 |
+| POST | `/api/analysis/{id}/chat` | 사용자 메시지 전송, AI 답변 생성 및 대화 저장 |
 | POST | `/api/recommendations` | 선택 결과에 맞춘 작은 행동 생성 |
 | POST | `/api/recommendations/{id}/feedback` | positive/negative 피드백 저장 |
 | POST | `/api/recommendations/{id}/alternative` | 부정 피드백 기반 더 작은 대안 생성 |
@@ -147,6 +149,19 @@ POST /api/recommendations
   "analysis_id": "00000000-0000-0000-0000-000000000000"
 }
 ```
+
+AI 채팅 요청:
+
+```json
+POST /api/analysis/{analysis_id}/chat
+{
+  "content": "이 결과를 생활 속에서 어떻게 확인해볼 수 있을까요?"
+}
+```
+
+채팅은 완료된 본인 분석에서만 사용할 수 있습니다. 최근 대화와 해당 분석의 증상,
+후보, 최신 추천이 AI 문맥으로 전달되며 사용자 메시지와 AI 답변은 한 턴으로 함께
+저장됩니다.
 
 모든 오류는 다음 형태입니다.
 
