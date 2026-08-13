@@ -1,27 +1,86 @@
-import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { AppHeader } from '@/src/components/AppHeader';
 import { MindMap } from '@/src/components/MindMap';
 import { Screen } from '@/src/components/Screen';
 import { useMindMapCauses } from '@/src/hooks/useMindMapCauses';
+import { backendApi } from '@/src/services/api';
 import { useProfile } from '@/src/store/ProfileContext';
+import type { AnalysisHistoryItem } from '@/src/types/api';
 import { colors } from '@/src/theme/tokens';
+
+const FOLLOW_UP_DELAY_MS = 3 * 60 * 60 * 1000;
+// Expo Go/개발 빌드에서는 UI를 바로 검증할 수 있도록 3시간 대기를 생략합니다.
+// 배포 빌드에서는 false가 되어 기존 3시간 조건이 그대로 적용됩니다.
+const FOLLOW_UP_TEST_MODE = __DEV__;
+// v3로 갱신해 이전 테스트에서 저장된 해결 상태를 한 번 초기화합니다.
+// 이번 테스트에서 '해결됐어요'를 누르면 v3에 저장되어 홈 카드가 사라지고 알림함에 남습니다.
+const RESOLVED_NOTIFICATION_KEY = 'rebot.resolved-follow-up-id.v3';
+
+function followUpTitle(description: string) {
+  const symptom = description.trim();
+  if (!symptom) return '지난번 불편했던 증상, 지금은 어떠신가요?';
+  return `지난번 ${symptom}, 지금은 어떠신가요?`;
+}
 
 export default function HomeScreen() {
   const { photoUri } = useProfile();
   const { causes, loading: mindMapLoading } = useMindMapCauses();
-  const [visible, setVisible] = useState(false);
+  const [followUp, setFollowUp] = useState<AnalysisHistoryItem | null>(null);
+  const [resolvedId, setResolvedId] = useState<string | null>(null);
   const [read, setRead] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
 
-  const dismissCard = () => setVisible(false);
+  useEffect(() => {
+    let active = true;
+    Promise.all([backendApi.listAnalyses(), AsyncStorage.getItem(RESOLVED_NOTIFICATION_KEY)])
+      .then(([items, storedResolvedId]) => {
+        if (!active) return;
+        const now = Date.now();
+        const latest = items.find((item) => {
+          // 개발 중에는 가장 최근 분석 기록을 바로 사용해 UI 흐름을 검증합니다.
+          if (FOLLOW_UP_TEST_MODE) return true;
 
-  const goAnswer = () => {
+          if (item.status !== 'completed' || item.selection_status === 'unselected') return false;
+          if (!item.recommendation_created_at) return false;
+
+          const recommendationTime = new Date(item.recommendation_created_at).getTime();
+          return Number.isFinite(recommendationTime) && now - recommendationTime >= FOLLOW_UP_DELAY_MS;
+        });
+        setFollowUp(latest ?? null);
+        setResolvedId(storedResolvedId);
+        if (latest && latest.id === storedResolvedId) setRead(true);
+      })
+      .catch(() => {
+        if (active) setFollowUp(null);
+      });
+    return () => { active = false; };
+  }, []);
+
+  const isResolved = Boolean(followUp && followUp.id === resolvedId);
+  const visibleFollowUp = followUp && !isResolved ? followUp : null;
+  const resolveFollowUp = async () => {
+    if (!followUp) return;
+    setResolvedId(followUp.id);
     setRead(true);
     setNotificationsOpen(false);
-    router.push('/history');
+    await AsyncStorage.setItem(RESOLVED_NOTIFICATION_KEY, followUp.id);
+  };
+
+  const goAnswer = () => {
+    if (!followUp) return;
+    setRead(true);
+    setNotificationsOpen(false);
+    router.push({
+      pathname: '/history/[id]',
+      params: {
+        id: followUp.id,
+        description: followUp.symptom_description,
+        ...(followUp.recommendation_action ? { recommendationAction: followUp.recommendation_action } : {}),
+      },
+    });
   };
 
   return (
@@ -29,34 +88,37 @@ export default function HomeScreen() {
       <AppHeader
         title="홈화면"
         rightIcon="notifications-outline"
-        rightBadge={!read}
+        rightBadge={Boolean(visibleFollowUp && !read)}
         onRightPress={() => setNotificationsOpen((current) => !current)}
       />
-      {notificationsOpen && (
+      {notificationsOpen && followUp && (
         <View style={styles.notificationPanel}>
           <Text style={styles.notificationTitle}>알림</Text>
-          <Pressable style={styles.notificationItem} onPress={goAnswer}>
+          <Pressable style={styles.notificationItem} onPress={isResolved ? undefined : goAnswer}>
             {!read && <View style={styles.notificationDot} />}
             <View style={styles.notificationCopyArea}>
-              <Text style={styles.notificationItemTitle}>어제 발생한 두통, 지금은 어떠신가요?</Text>
-              <Text style={styles.notificationItemCopy}>현재 상태를 확인해 주세요.</Text>
+              <Text style={styles.notificationItemTitle} numberOfLines={2}>{followUpTitle(followUp.symptom_description)}</Text>
+              <Text style={styles.notificationItemCopy}>{isResolved ? '사용자가 증상이 해결되었다고 응답했어요.' : '이전 대화 내역에서 현재 상태를 확인해 주세요.'}</Text>
+              {isResolved && <Text style={styles.resolvedStatus}>해결됨</Text>}
             </View>
           </Pressable>
         </View>
       )}
       <View style={styles.body}>
-        {visible && (
+        {visibleFollowUp && (
           <View style={styles.followUpCard}>
             <View style={styles.copyArea}>
-              <Text style={styles.cardTitle}>어제 발생한 두통, 지금은 어떠신가요?</Text>
+              <Text style={styles.cardTitle} numberOfLines={2}>{followUpTitle(visibleFollowUp.symptom_description)}</Text>
               <Text style={styles.cardCopy}>현재 상태를 확인해볼게요.</Text>
-              <Pressable hitSlop={10} onPress={goAnswer}>
-                <Text style={styles.cardLink}>답변하러가기</Text>
-              </Pressable>
+              <View style={styles.followUpActions}>
+                <Pressable style={[styles.followUpButton, styles.resolvedButton]} onPress={() => void resolveFollowUp()}>
+                  <Text style={styles.resolvedButtonText}>해결됐어요</Text>
+                </Pressable>
+                <Pressable style={[styles.followUpButton, styles.stillUnwellButton]} onPress={goAnswer}>
+                  <Text style={styles.stillUnwellButtonText}>아직 불편해요</Text>
+                </Pressable>
+              </View>
             </View>
-            <Pressable style={styles.close} hitSlop={12} onPress={dismissCard}>
-              <Ionicons name="close-outline" size={31} color="#A1A1A1" />
-            </Pressable>
           </View>
         )}
         <Text style={styles.mindMapTitle}>원인 마인드맵</Text>
@@ -106,13 +168,10 @@ const styles = StyleSheet.create({
     color: colors.muted,
   },
   followUpCard: {
-    minHeight: 133,
-    paddingVertical: 24,
-    paddingLeft: 24,
-    paddingRight: 64,
+    minHeight: 166,
+    padding: 24,
     borderRadius: 16,
     backgroundColor: '#FFFAE9',
-    flexDirection: 'row',
   },
   copyArea: {
     flex: 1,
@@ -129,19 +188,36 @@ const styles = StyleSheet.create({
     lineHeight: 19,
     color: '#A2A2A2',
   },
-  cardLink: {
-    marginTop: 10,
-    alignSelf: 'flex-start',
-    fontSize: 12,
-    lineHeight: 18,
-    fontWeight: '600',
-    color: '#D7BB91',
-    textDecorationLine: 'underline',
+  followUpActions: {
+    marginTop: 18,
+    flexDirection: 'row',
+    gap: 10,
   },
-  close: {
-    position: 'absolute',
-    top: 52,
-    right: 22,
+  followUpButton: {
+    flex: 1,
+    minHeight: 43,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 10,
+  },
+  resolvedButton: {
+    borderWidth: 1,
+    borderColor: '#E7D9BF',
+    backgroundColor: colors.white,
+  },
+  stillUnwellButton: {
+    backgroundColor: colors.text,
+  },
+  resolvedButtonText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#9A7D52',
+  },
+  stillUnwellButtonText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: colors.white,
   },
   notificationPanel: {
     position: 'absolute',
@@ -182,4 +258,15 @@ const styles = StyleSheet.create({
   notificationCopyArea: { flex: 1 },
   notificationItemTitle: { fontSize: 13, lineHeight: 19, fontWeight: '600', color: colors.text },
   notificationItemCopy: { marginTop: 4, fontSize: 12, lineHeight: 18, color: '#9B9B9B' },
+  resolvedStatus: {
+    alignSelf: 'flex-start',
+    marginTop: 8,
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+    borderRadius: 8,
+    backgroundColor: '#FFF4CC',
+    color: '#9A7D52',
+    fontSize: 11,
+    fontWeight: '700',
+  },
 });

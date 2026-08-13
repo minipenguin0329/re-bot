@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routes.analysis import router as analysis_router
+from app.api.routes.chats import router as chats_router
 from app.api.routes.health import router as health_router
 from app.api.routes.logs import router as logs_router
 from app.api.routes.profile import router as profile_router
@@ -39,6 +40,7 @@ def create_app() -> FastAPI:
     application.include_router(logs_router, prefix="/api")
     application.include_router(symptoms_router, prefix="/api")
     application.include_router(analysis_router, prefix="/api")
+    application.include_router(chats_router, prefix="/api")
     application.include_router(recommendations_router, prefix="/api")
     application.include_router(reports_router, prefix="/api")
     application.include_router(products_router, prefix="/api")

@@ -13,6 +13,8 @@ class ProfileBase(BaseModel):
     birth_year: int | None = None
     gender: Annotated[str, Field(max_length=30)] | None = None
     average_sleep_hours: float | None = Field(default=None, ge=0, le=24)
+    known_conditions: Annotated[str, Field(max_length=2000)] | None = None
+    allergies: Annotated[str, Field(max_length=2000)] | None = None
 
     @field_validator("birth_year")
     @classmethod

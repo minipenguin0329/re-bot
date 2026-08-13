@@ -11,6 +11,31 @@ import { useAuth } from '@/src/store/AuthContext';
 import { useProfile } from '@/src/store/ProfileContext';
 import { colors } from '@/src/theme/tokens';
 
+function getLoginFailureMessage(error: unknown) {
+  const code = typeof error === 'object' && error !== null && 'code' in error
+    ? String(error.code)
+    : '';
+  const message = error instanceof Error ? error.message.toLowerCase() : '';
+
+  if (code === 'invalid_credentials' || message.includes('invalid login credentials')) {
+    return '이메일 또는 비밀번호가 일치하지 않습니다. 입력한 내용을 다시 확인해주세요.';
+  }
+
+  if (code === 'email_not_confirmed' || message.includes('email not confirmed')) {
+    return '이메일 인증이 완료되지 않았습니다. 받은 편지함에서 인증 메일을 확인해주세요.';
+  }
+
+  if (
+    code === 'over_request_rate_limit'
+    || code === 'over_email_send_rate_limit'
+    || message.includes('rate limit')
+  ) {
+    return '로그인 시도가 너무 많습니다. 잠시 후 다시 시도해주세요.';
+  }
+
+  return getErrorMessage(error);
+}
+
 export default function LoginScreen() {
   const { signIn } = useAuth();
   const { refreshProfile } = useProfile();
@@ -31,7 +56,7 @@ export default function LoginScreen() {
       const me = await refreshProfile();
       router.replace(me.profile ? '/(tabs)/home' : '/onboarding/basic');
     } catch (error) {
-      Alert.alert('로그인 실패', getErrorMessage(error));
+      Alert.alert('로그인 정보를 확인해주세요', getLoginFailureMessage(error));
     } finally {
       setLoading(false);
     }

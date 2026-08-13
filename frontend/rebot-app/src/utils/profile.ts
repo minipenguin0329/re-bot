@@ -10,5 +10,7 @@ export function hoursToSleepOption(hours: number | null | undefined): string {
   if (hours == null) return SLEEP_OPTIONS[0];
   if (hours <= 4) return SLEEP_OPTIONS[1];
   if (hours <= 5) return SLEEP_OPTIONS[2];
-  return SLEEP_OPTIONS[3];
+  if (hours <= 6) return SLEEP_OPTIONS[3];
+  if (hours <= 7) return SLEEP_OPTIONS[4];
+  return SLEEP_OPTIONS[5];
 }

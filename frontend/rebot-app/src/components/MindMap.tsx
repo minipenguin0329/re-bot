@@ -78,12 +78,19 @@ function Branch<T extends BranchNode>({ node, baseAngle, maxRotate, index, color
           entering={ZoomIn.delay(index * 40).duration(220)}
           exiting={ZoomOut.duration(150)}
           style={[
-            styles.node,
-            { left: anchorX - NODE_SIZE / 2, top: anchorY - NODE_SIZE / 2, width: NODE_SIZE, height: NODE_SIZE, borderRadius: NODE_SIZE / 2, backgroundColor: color, borderColor },
-            nodeAnimatedStyle,
+            styles.nodeAnchor,
+            { left: anchorX - NODE_SIZE / 2, top: anchorY - NODE_SIZE / 2 },
           ]}
         >
-          <Text style={styles.nodeText} numberOfLines={2}>{node.label}</Text>
+          <Animated.View
+            style={[
+              styles.node,
+              { backgroundColor: color, borderColor },
+              nodeAnimatedStyle,
+            ]}
+          >
+            <Text style={styles.nodeText} numberOfLines={2}>{node.label}</Text>
+          </Animated.View>
         </Animated.View>
       </GestureDetector>
     </>
@@ -206,13 +213,20 @@ const styles = StyleSheet.create({
   centerPressable: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' },
   avatarImage: { width: CENTER_SIZE, height: CENTER_SIZE },
   causeBubbleText: { fontSize: 12, fontWeight: '800', color: colors.text, textAlign: 'center', paddingHorizontal: 4 },
-  node: {
+  nodeAnchor: {
     position: 'absolute',
+    width: NODE_SIZE,
+    height: NODE_SIZE,
+    zIndex: 1,
+  },
+  node: {
+    width: NODE_SIZE,
+    height: NODE_SIZE,
+    borderRadius: NODE_SIZE / 2,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 6,
-    zIndex: 1,
   },
   nodeText: { fontSize: 12, fontWeight: '700', color: colors.text, textAlign: 'center' },
   detailSection: {

@@ -3,6 +3,8 @@ import { Platform } from 'react-native';
 import type {
   AnalysisHistoryItem,
   AnalysisResponse,
+  ChatHistoryResponse,
+  ChatReplyResponse,
   DailyLogPayload,
   DailyLogResponse,
   FeedbackResponse,
@@ -140,6 +142,13 @@ export const backendApi = {
     }),
   listAnalyses: () => request<AnalysisHistoryItem[]>('/api/analysis'),
   getAnalysis: (analysisId: string) => request<AnalysisResponse>(`/api/analysis/${analysisId}`),
+  getAnalysisChat: (analysisId: string) =>
+    request<ChatHistoryResponse>(`/api/analysis/${analysisId}/chat`),
+  sendAnalysisChatMessage: (analysisId: string, content: string) =>
+    request<ChatReplyResponse>(`/api/analysis/${analysisId}/chat`, {
+      method: 'POST',
+      ...jsonBody({ content }),
+    }),
   selectCandidates: (analysisId: string, candidateIds: string[]) =>
     request<{ analysis_id: string; selection_status: 'candidate' | 'none'; selected_candidate_ids: string[] }>(
       `/api/analysis/${analysisId}/select`,

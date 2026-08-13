@@ -22,6 +22,12 @@ create table if not exists public.profiles (
   average_sleep_hours double precision check (
     average_sleep_hours is null or average_sleep_hours between 0 and 24
   ),
+  known_conditions text check (
+    known_conditions is null or char_length(known_conditions) <= 2000
+  ),
+  allergies text check (
+    allergies is null or char_length(allergies) <= 2000
+  ),
   created_at timestamptz not null default timezone('utc', now()),
   updated_at timestamptz not null default timezone('utc', now())
 );
@@ -102,6 +108,22 @@ create table if not exists public.recommendation_feedback (
   created_at timestamptz not null default timezone('utc', now())
 );
 
+create table if not exists public.chat_messages (
+  sequence bigint generated always as identity unique,
+  id uuid primary key default gen_random_uuid(),
+  analysis_id uuid not null references public.analyses(id) on delete cascade,
+  turn_id uuid not null,
+  role text not null check (role in ('user', 'assistant')),
+  content text not null check (char_length(content) between 1 and 4000),
+  model_name text,
+  created_at timestamptz not null default timezone('utc', now()),
+  unique (turn_id, role),
+  check (
+    (role = 'user' and model_name is null)
+    or (role = 'assistant' and model_name is not null)
+  )
+);
+
 create table if not exists public.reports (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
@@ -155,6 +177,8 @@ create index if not exists recommendation_feedback_user_created_idx
   on public.recommendation_feedback (user_id, created_at desc);
 create index if not exists recommendation_feedback_recommendation_idx
   on public.recommendation_feedback (recommendation_id);
+create index if not exists chat_messages_analysis_sequence_idx
+  on public.chat_messages (analysis_id, sequence);
 create index if not exists reports_user_period_idx
   on public.reports (user_id, period_type, period_start desc);
 create index if not exists products_active_category_idx
@@ -177,6 +201,7 @@ alter table public.analyses enable row level security;
 alter table public.analysis_candidates enable row level security;
 alter table public.recommendations enable row level security;
 alter table public.recommendation_feedback enable row level security;
+alter table public.chat_messages enable row level security;
 alter table public.reports enable row level security;
 alter table public.products enable row level security;
 
@@ -189,6 +214,7 @@ begin
     'profiles_own_rows', 'daily_logs_own_rows', 'symptoms_own_rows',
     'analyses_own_rows', 'analysis_candidates_own_rows',
     'recommendations_own_rows', 'recommendation_feedback_own_rows',
+    'chat_messages_own_analysis',
     'reports_own_rows', 'products_read_active'
   ] loop
     execute format('drop policy if exists %I on public.%I', policy_name,
@@ -200,6 +226,7 @@ begin
         when 'analysis_candidates_own_rows' then 'analysis_candidates'
         when 'recommendations_own_rows' then 'recommendations'
         when 'recommendation_feedback_own_rows' then 'recommendation_feedback'
+        when 'chat_messages_own_analysis' then 'chat_messages'
         when 'reports_own_rows' then 'reports'
         else 'products'
       end
@@ -239,6 +266,21 @@ create policy recommendations_own_rows on public.recommendations
 create policy recommendation_feedback_own_rows on public.recommendation_feedback
   for all to authenticated
   using ((select auth.uid()) = user_id) with check ((select auth.uid()) = user_id);
+create policy chat_messages_own_analysis on public.chat_messages
+  for all to authenticated
+  using (
+    exists (
+      select 1 from public.analyses
+      where analyses.id = chat_messages.analysis_id
+        and analyses.user_id = (select auth.uid())
+    )
+  ) with check (
+    exists (
+      select 1 from public.analyses
+      where analyses.id = chat_messages.analysis_id
+        and analyses.user_id = (select auth.uid())
+    )
+  );
 create policy reports_own_rows on public.reports
   for all to authenticated
   using ((select auth.uid()) = user_id) with check ((select auth.uid()) = user_id);

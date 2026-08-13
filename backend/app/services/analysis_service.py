@@ -130,6 +130,9 @@ class AnalysisService:
                     recommendation_action=(
                         recommendation["action"] if recommendation else None
                     ),
+                    recommendation_created_at=(
+                        recommendation["created_at"] if recommendation else None
+                    ),
                     created_at=analysis["created_at"],
                 )
             )

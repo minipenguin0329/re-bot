@@ -60,5 +60,6 @@ class AnalysisHistoryItem(BaseModel):
     status: Literal["pending", "completed", "failed"]
     selection_status: Literal["unselected", "candidate", "none"]
     recommendation_action: str | None = None
+    recommendation_created_at: datetime | None = None
     created_at: datetime
 

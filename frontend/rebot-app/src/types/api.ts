@@ -4,6 +4,8 @@ export type ProfilePayload = {
   birth_year?: number | null;
   gender?: string | null;
   average_sleep_hours?: number | null;
+  known_conditions?: string | null;
+  allergies?: string | null;
 };
 
 export type ProfileResponse = ProfilePayload & {
@@ -78,7 +80,29 @@ export type AnalysisHistoryItem = {
   status: 'pending' | 'completed' | 'failed';
   selection_status: 'unselected' | 'candidate' | 'none';
   recommendation_action: string | null;
+  recommendation_created_at: string | null;
   created_at: string;
+};
+
+export type ChatMessageResponse = {
+  id: string;
+  analysis_id: string;
+  turn_id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  model_name: string | null;
+  created_at: string;
+};
+
+export type ChatHistoryResponse = {
+  analysis_id: string;
+  messages: ChatMessageResponse[];
+};
+
+export type ChatReplyResponse = {
+  analysis_id: string;
+  user_message: ChatMessageResponse;
+  assistant_message: ChatMessageResponse;
 };
 
 export type RecommendationResponse = {

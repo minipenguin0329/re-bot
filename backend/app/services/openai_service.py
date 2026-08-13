@@ -8,6 +8,7 @@ from pydantic import BaseModel, ValidationError
 
 from app.core.config import Settings, get_settings
 from app.core.exceptions import AppError
+from app.prompts.chat import CHAT_INSTRUCTIONS
 from app.prompts.cause_analysis import CAUSE_ANALYSIS_INSTRUCTIONS
 from app.prompts.recommendation import (
     ALTERNATIVE_INSTRUCTIONS,
@@ -15,6 +16,7 @@ from app.prompts.recommendation import (
 )
 from app.prompts.report import REPORT_INSTRUCTIONS
 from app.schemas.analysis import CauseAnalysisResult
+from app.schemas.chat import ChatAnswer
 from app.schemas.recommendation import RecommendationResult
 from app.schemas.report import ReportSummary
 
@@ -106,6 +108,9 @@ class OpenAIService:
 
     async def create_report(self, context: dict[str, object]) -> ReportSummary:
         return await self._parse(REPORT_INSTRUCTIONS, context, ReportSummary)
+
+    async def create_chat_reply(self, context: dict[str, object]) -> ChatAnswer:
+        return await self._parse(CHAT_INSTRUCTIONS, context, ChatAnswer)
 
     async def check_connection(self) -> bool:
         class ConnectionCheck(BaseModel):

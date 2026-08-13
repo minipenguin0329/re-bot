@@ -13,6 +13,7 @@ from app.api.dependencies import get_database_client
 from app.core.security import CurrentUser, get_current_user
 from app.main import app
 from app.schemas.analysis import CauseAnalysisResult, CauseCandidate
+from app.schemas.chat import ChatAnswer
 from app.schemas.recommendation import RecommendationResult
 from app.schemas.report import ReportSummary
 from app.services.openai_service import get_openai_service
@@ -127,7 +128,12 @@ class FakeQuery:
 
         if self.action == "insert":
             values = self.payload if isinstance(self.payload, list) else [self.payload]
-            created = [self._new_row(value) for value in values]
+            created = []
+            for value in values:
+                row = self._new_row(value)
+                if self.table == "chat_messages":
+                    row.setdefault("sequence", len(rows) + len(created) + 1)
+                created.append(row)
             rows.extend(created)
             result = created
         elif self.action == "upsert":
@@ -211,6 +217,11 @@ class FakeOpenAIService:
             overview="서버에서 계산한 이번 기간의 생활 기록 요약입니다.",
             observations=["기록된 날의 수면과 스트레스 추이를 함께 확인해보세요."],
             disclaimer="이 요약만으로 인과관계나 질병을 판단할 수 없습니다.",
+        )
+
+    async def create_chat_reply(self, _: dict[str, object]) -> ChatAnswer:
+        return ChatAnswer(
+            answer="기록을 바탕으로 수면 시간과 불편감의 변화를 함께 살펴보세요."
         )
 
 

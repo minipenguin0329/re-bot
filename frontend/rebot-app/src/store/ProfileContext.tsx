@@ -15,6 +15,8 @@ type Profile = {
   gender: '남성' | '여성' | null;
   birthYear: number | null;
   sleepHours: string;
+  knownConditions: string;
+  allergies: string;
   notifications: Notifications;
 };
 type EditableProfile = Omit<Profile, 'notifications'>;
@@ -36,6 +38,8 @@ const defaultProfile: Profile = {
   gender: null,
   birthYear: null,
   sleepHours: '',
+  knownConditions: '',
+  allergies: '',
   notifications: { all: true, report: true, marketing: false },
 };
 
@@ -57,6 +61,8 @@ export function ProfileProvider({ children }: PropsWithChildren) {
       birthYear: me.profile?.birth_year ?? null,
       gender: me.profile?.gender === '남성' || me.profile?.gender === '여성' ? me.profile.gender : null,
       sleepHours: hoursToSleepOption(me.profile?.average_sleep_hours),
+      knownConditions: me.profile?.known_conditions ?? '',
+      allergies: me.profile?.allergies ?? '',
     }));
   }, [user]);
 
@@ -101,6 +107,8 @@ export function ProfileProvider({ children }: PropsWithChildren) {
       birth_year: values.birthYear,
       gender: values.gender,
       average_sleep_hours: sleepOptionToHours(values.sleepHours),
+      known_conditions: values.knownConditions.trim() || null,
+      allergies: values.allergies.trim() || null,
     };
     const saved = remoteProfileExists
       ? await backendApi.updateProfile(payload)
