@@ -5,7 +5,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { runOnJS, useAnimatedProps, useAnimatedStyle, useSharedValue, withSpring, ZoomIn, ZoomOut } from 'react-native-reanimated';
 import Svg, { Line } from 'react-native-svg';
-import { DUMMY_MIND_MAP_CAUSES, MindMapCause } from '@/src/data/mindmap';
+import { DUMMY_MIND_MAP_CAUSES, MindMapCause, MindMapSymptom } from '@/src/data/mindmap';
 import { colors, radius } from '@/src/theme/tokens';
 
 const AnimatedLine = Animated.createAnimatedComponent(Line);
@@ -18,7 +18,15 @@ const CENTER_SIZE = 72;
 const MAX_ROTATE = 0.3;
 const MIN_ANGLE_GAP = 2 * Math.asin(Math.min(1, NODE_SIZE / (2 * NODE_RADIUS)));
 
+function causeSeverityColors(symptomCount: number): { background: string; border: string } {
+  if (symptomCount <= 1) return { background: '#FFF3B0', border: '#F0C808' };
+  if (symptomCount <= 3) return { background: '#FFDCAE', border: '#F2994A' };
+  return { background: '#FFC9C2', border: '#EB5757' };
+}
+
 type BranchNode = { id: string; label: string };
+
+type NodeColor<T> = string | ((node: T) => string);
 
 type BranchProps<T extends BranchNode> = {
   node: T;
@@ -103,9 +111,13 @@ type CircularBranchesProps<T extends BranchNode> = {
   centerContent: ReactNode;
   centerColor: string;
   centerBorderColor: string;
-  nodeColor: string;
-  nodeBorderColor: string;
+  nodeColor: NodeColor<T>;
+  nodeBorderColor: NodeColor<T>;
 };
+
+function resolveNodeColor<T>(color: NodeColor<T>, node: T): string {
+  return typeof color === 'function' ? color(node) : color;
+}
 
 function CircularBranches<T extends BranchNode>({
   nodes, onNodePress, centerContent, centerColor, centerBorderColor, nodeColor, nodeBorderColor,
@@ -133,7 +145,16 @@ function CircularBranches<T extends BranchNode>({
         {centerContent}
       </View>
       {branches.map(({ node, baseAngle }, index) => (
-        <Branch key={node.id} node={node} baseAngle={baseAngle} maxRotate={maxRotate} index={index} color={nodeColor} borderColor={nodeBorderColor} onPress={onNodePress} />
+        <Branch
+          key={node.id}
+          node={node}
+          baseAngle={baseAngle}
+          maxRotate={maxRotate}
+          index={index}
+          color={resolveNodeColor(nodeColor, node)}
+          borderColor={resolveNodeColor(nodeBorderColor, node)}
+          onPress={onNodePress}
+        />
       ))}
     </View>
   );
@@ -155,8 +176,8 @@ export function MindMap({ photoUri = null, causes = DUMMY_MIND_MAP_CAUSES }: Pro
       <CircularBranches
         nodes={selectedCause ? selectedCause.symptoms : causes}
         onNodePress={selectedCause ? undefined : handleCausePress}
-        nodeColor={selectedCause ? colors.surface : colors.warningSoft}
-        nodeBorderColor={selectedCause ? colors.border : colors.accent}
+        nodeColor={selectedCause ? colors.surface : (item: MindMapCause | MindMapSymptom) => causeSeverityColors('symptoms' in item ? item.symptoms.length : 0).background}
+        nodeBorderColor={selectedCause ? colors.border : (item: MindMapCause | MindMapSymptom) => causeSeverityColors('symptoms' in item ? item.symptoms.length : 0).border}
         centerColor={selectedCause ? colors.accent : colors.surfaceStrong}
         centerBorderColor={selectedCause ? colors.accent : colors.white}
         centerContent={
