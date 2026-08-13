@@ -39,6 +39,7 @@ export function WheelPicker({ items, initialIndex = 0, onChange, itemHeight = 65
       onMomentumScrollEnd={handleScroll}
       contentOffset={{ x: 0, y: initialIndex * itemHeight }}
       contentContainerStyle={{ paddingVertical: itemHeight }}
+      nestedScrollEnabled
     >
       {items.map((item, itemIndex) => <View key={`${item}-${itemIndex}`} style={{ height: itemHeight, alignItems: 'center', justifyContent: 'center' }}>
         <Text style={itemIndex === index ? styles.selected : styles.faded}>{item}</Text>

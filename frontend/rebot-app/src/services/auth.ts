@@ -1,6 +1,8 @@
 import 'react-native-url-polyfill/auto';
+
 import * as Linking from 'expo-linking';
 import * as WebBrowser from 'expo-web-browser';
+
 import { supabase } from '@/src/lib/supabase';
 
 WebBrowser.maybeCompleteAuthSession();
@@ -40,8 +42,16 @@ async function createSessionFromUrl(url: string) {
   if (error) throw error;
 }
 
+export function getKakaoRedirectUrl() {
+  const configuredRedirectUrl = process.env.EXPO_PUBLIC_AUTH_REDIRECT_URL?.trim();
+
+  if (configuredRedirectUrl) return configuredRedirectUrl;
+
+  return Linking.createURL('/auth/callback');
+}
+
 export async function signInWithKakao(): Promise<boolean> {
-  const redirectTo = Linking.createURL('auth/callback');
+  const redirectTo = getKakaoRedirectUrl();
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'kakao',
     options: {
@@ -60,5 +70,13 @@ export async function signInWithKakao(): Promise<boolean> {
   if (result.type !== 'success') return false;
 
   await createSessionFromUrl(result.url);
+
+  const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+  if (sessionError) throw sessionError;
+
+  if (!sessionData.session) {
+    throw new Error('카카오 로그인 세션을 생성하지 못했습니다. 콜백 URL 설정을 확인해주세요.');
+  }
+
   return true;
 }

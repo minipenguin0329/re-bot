@@ -43,7 +43,6 @@ export default function TabLayout() {
           }}
         />
       ))}
-      <Tabs.Screen name="market" options={{ href: null }} />
     </Tabs>
   );
 }

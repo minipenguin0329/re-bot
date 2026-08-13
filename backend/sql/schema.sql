@@ -22,6 +22,12 @@ create table if not exists public.profiles (
   average_sleep_hours double precision check (
     average_sleep_hours is null or average_sleep_hours between 0 and 24
   ),
+  known_conditions text check (
+    known_conditions is null or char_length(known_conditions) <= 2000
+  ),
+  allergies text check (
+    allergies is null or char_length(allergies) <= 2000
+  ),
   created_at timestamptz not null default timezone('utc', now()),
   updated_at timestamptz not null default timezone('utc', now())
 );
@@ -173,6 +179,8 @@ create index if not exists recommendation_feedback_recommendation_idx
   on public.recommendation_feedback (recommendation_id);
 create index if not exists chat_messages_analysis_sequence_idx
   on public.chat_messages (analysis_id, sequence);
+create index if not exists chat_messages_analysis_created_idx
+  on public.chat_messages (analysis_id, created_at desc);
 create index if not exists reports_user_period_idx
   on public.reports (user_id, period_type, period_start desc);
 create index if not exists products_active_category_idx

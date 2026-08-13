@@ -14,14 +14,12 @@ type WellnessContextValue = {
   analysis: AnalysisResponse | null;
   recommendation: RecommendationResponse | null;
   diagnosisDraft: DiagnosisDraft | null;
-  productConsent: boolean;
   prepareDiagnosis: (draft: DiagnosisDraft) => void;
   runPreparedDiagnosis: () => Promise<AnalysisResponse>;
   chooseCandidate: (candidateIds: string[]) => Promise<RecommendationResponse>;
   requestKnownCauseSolution: (situation: string) => Promise<RecommendationResponse>;
   sendFeedback: (feedback: 'positive' | 'negative', reason?: string) => Promise<void>;
   requestAlternative: (reason?: string) => Promise<RecommendationResponse>;
-  setProductConsent: (consent: boolean) => void;
   resetWellnessFlow: () => void;
 };
 
@@ -32,7 +30,6 @@ export function WellnessProvider({ children }: PropsWithChildren) {
   const [analysis, setAnalysis] = useState<AnalysisResponse | null>(null);
   const [recommendation, setRecommendation] = useState<RecommendationResponse | null>(null);
   const [diagnosisDraft, setDiagnosisDraft] = useState<DiagnosisDraft | null>(null);
-  const [productConsent, setProductConsent] = useState(false);
 
   const prepareDiagnosis = (draft: DiagnosisDraft) => {
     setFlow('diagnosis');
@@ -107,14 +104,12 @@ export function WellnessProvider({ children }: PropsWithChildren) {
     analysis,
     recommendation,
     diagnosisDraft,
-    productConsent,
     prepareDiagnosis,
     runPreparedDiagnosis,
     chooseCandidate,
     requestKnownCauseSolution,
     sendFeedback,
     requestAlternative,
-    setProductConsent,
     resetWellnessFlow,
   };
 

@@ -77,6 +77,30 @@ def test_chat_history_returns_messages_for_analysis(
     assert [item["role"] for item in body["messages"]] == ["user", "assistant"]
 
 
+def test_chat_history_can_be_deleted_immediately(
+    authenticated_client: TestClient, fake_db: FakeDatabase
+) -> None:
+    analysis_id = _analysis(fake_db)
+    authenticated_client.post(
+        f"/api/analysis/{analysis_id}/chat", json={"content": "첫 질문"}
+    )
+
+    response = authenticated_client.delete(f"/api/analysis/{analysis_id}/chat")
+
+    assert response.status_code == 204, response.text
+    assert fake_db.tables["chat_messages"] == []
+
+
+def test_chat_history_delete_cannot_access_another_users_analysis(
+    authenticated_client: TestClient, fake_db: FakeDatabase
+) -> None:
+    analysis_id = _analysis(fake_db, user_id=USER_B)
+
+    response = authenticated_client.delete(f"/api/analysis/{analysis_id}/chat")
+
+    assert response.status_code == 404, response.text
+
+
 def test_chat_is_not_available_for_incomplete_analysis(
     authenticated_client: TestClient, fake_db: FakeDatabase
 ) -> None:

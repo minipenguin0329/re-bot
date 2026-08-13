@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Alert, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { AppHeader } from '@/src/components/AppHeader';
 import { PrimaryButton } from '@/src/components/PrimaryButton';
 import { Screen } from '@/src/components/Screen';
@@ -14,6 +14,8 @@ export default function ProfileSurveyScreen() {
   const { name, updateProfile, persistProfile } = useProfile();
   const [nickname, setNickname] = useState(name);
   const [sleepHours, setSleepHours] = useState<string>(SLEEP_OPTIONS[DEFAULT_SLEEP_INDEX]);
+  const [knownConditions, setKnownConditions] = useState('');
+  const [allergies, setAllergies] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleStart = async () => {
@@ -22,7 +24,12 @@ export default function ProfileSurveyScreen() {
       Alert.alert('입력 확인', '닉네임을 2자 이상 입력해주세요.');
       return;
     }
-    const finalValues = { name: trimmedNickname || name, sleepHours };
+    const finalValues = {
+      name: trimmedNickname || name,
+      sleepHours,
+      knownConditions: knownConditions.trim(),
+      allergies: allergies.trim(),
+    };
     updateProfile(finalValues);
     setLoading(true);
     try {
@@ -35,11 +42,50 @@ export default function ProfileSurveyScreen() {
     }
   };
 
-  return <Screen><AppHeader title="기본 정보 입력" back /><View style={styles.body}>
-    <Text style={styles.label}>닉네임을 입력해주세요</Text><TextInput style={styles.input} placeholder="한글/영문 2~10자" placeholderTextColor="#B9B9BE" value={nickname} onChangeText={setNickname} maxLength={10} />
-    <View style={styles.sleepBlock}><Text style={styles.label}>평소 수면 시간을 선택해주세요</Text><WheelPicker items={SLEEP_OPTIONS} initialIndex={DEFAULT_SLEEP_INDEX} pillWidth={200} onChange={(_, value) => setSleepHours(value as string)} /></View>
-    <PrimaryButton label="시작하기" onPress={handleStart} loading={loading} style={styles.button} />
-  </View></Screen>;
+  return <Screen><AppHeader title="기본 정보 입력" back />
+    <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <ScrollView
+        style={styles.flex}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        nestedScrollEnabled
+      >
+        <Text style={styles.label}>닉네임을 입력해주세요</Text>
+        <TextInput style={styles.input} placeholder="한글/영문 2~10자" placeholderTextColor="#B9B9BE" value={nickname} onChangeText={setNickname} maxLength={10} />
+        <View style={styles.sleepBlock}>
+          <Text style={styles.label}>평소 수면 시간을 선택해주세요</Text>
+          <WheelPicker items={SLEEP_OPTIONS} initialIndex={DEFAULT_SLEEP_INDEX} pillWidth={200} onChange={(_, value) => setSleepHours(value as string)} />
+        </View>
+        <View style={styles.healthBlock}>
+          <Text style={styles.label}>지병 <Text style={styles.helper}>(알고 계신 질환이 있다면 입력해 주세요)</Text></Text>
+          <TextInput
+            style={styles.textArea}
+            placeholder="예) 고혈압, 당뇨, 천식 등"
+            placeholderTextColor="#B9B9BE"
+            value={knownConditions}
+            onChangeText={setKnownConditions}
+            multiline
+            textAlignVertical="top"
+            maxLength={2000}
+          />
+          <Text style={[styles.label, styles.allergyLabel]}>알레르기 <Text style={styles.helper}>(음식·환경·약물 등)</Text></Text>
+          <TextInput
+            style={styles.textArea}
+            placeholder="예) 땅콩, 우유, 꽃가루 등"
+            placeholderTextColor="#B9B9BE"
+            value={allergies}
+            onChangeText={setAllergies}
+            multiline
+            textAlignVertical="top"
+            maxLength={2000}
+          />
+          <Text style={styles.optional}>모든 항목은 선택 사항입니다. 나중에 내 정보에서 수정할 수 있습니다.</Text>
+        </View>
+      </ScrollView>
+      <View style={styles.footer}><PrimaryButton label="시작하기" onPress={handleStart} loading={loading} /></View>
+    </KeyboardAvoidingView>
+  </Screen>;
 }
 
-const styles = StyleSheet.create({ body: { flex: 1, paddingHorizontal: 24, paddingTop: 28, paddingBottom: 16 }, label: { fontSize: 15, fontWeight: '600', margin: 8 }, input: { height: 60, backgroundColor: colors.surfaceStrong, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border, paddingHorizontal: 20, fontSize: 14 }, sleepBlock: { marginTop: 30 }, button: { marginTop: 'auto' } });
+const styles = StyleSheet.create({ flex: { flex: 1 }, content: { paddingHorizontal: 24, paddingTop: 28, paddingBottom: 24 }, label: { fontSize: 15, fontWeight: '600', marginHorizontal: 8, marginBottom: 8, color: colors.text }, helper: { color: colors.muted, fontSize: 12, fontWeight: '400' }, input: { height: 60, backgroundColor: colors.surfaceStrong, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border, paddingHorizontal: 20, fontSize: 14 }, sleepBlock: { marginTop: 30 }, healthBlock: { marginTop: 24 }, allergyLabel: { marginTop: 18 }, textArea: { minHeight: 88, backgroundColor: colors.background, borderRadius: 6, borderWidth: 1, borderColor: colors.border, paddingHorizontal: 14, paddingVertical: 12, fontSize: 13, lineHeight: 19 }, optional: { marginTop: 8, color: colors.muted, fontSize: 10, lineHeight: 15 }, footer: { paddingHorizontal: 24, paddingTop: 8, paddingBottom: 16, backgroundColor: colors.background } });

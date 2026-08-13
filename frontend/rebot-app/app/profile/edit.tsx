@@ -15,7 +15,7 @@ import { colors } from '@/src/theme/tokens';
 
 export default function EditProfileScreen() {
   const { updateAccount } = useAuth();
-  const { name, bio, photoUri, email, job, sleepHours, updateProfile, persistProfile } = useProfile();
+  const { name, bio, photoUri, email, job, sleepHours, knownConditions, allergies, updateProfile, persistProfile } = useProfile();
   const [draftName, setDraftName] = useState(name);
   const [draftBio, setDraftBio] = useState(bio);
   const [draftPhoto, setDraftPhoto] = useState(photoUri);
@@ -26,6 +26,8 @@ export default function EditProfileScreen() {
   const [draftSleepHours, setDraftSleepHours] = useState<string>(
     Number.isFinite(initialSleepHours) ? String(initialSleepHours) : '',
   );
+  const [draftKnownConditions, setDraftKnownConditions] = useState(knownConditions);
+  const [draftAllergies, setDraftAllergies] = useState(allergies);
   const [loading, setLoading] = useState(false);
 
   const handlePickPhoto = async () => {
@@ -50,6 +52,8 @@ export default function EditProfileScreen() {
       email: draftEmail.trim(),
       job: draftJob.trim(),
       sleepHours: trimmedSleepHours,
+      knownConditions: draftKnownConditions.trim(),
+      allergies: draftAllergies.trim(),
     };
     setLoading(true);
     try {
@@ -83,6 +87,9 @@ export default function EditProfileScreen() {
     <FormField label="직업" value={draftJob} onChangeText={setDraftJob} placeholder="예) 학생, 회사원, 프리랜서 등" />
 
     <FormField label="평소 수면 시간 (시간)" value={draftSleepHours} onChangeText={setDraftSleepHours} placeholder="예) 7" keyboardType="decimal-pad" />
+
+    <FormField label="지병" value={draftKnownConditions} onChangeText={setDraftKnownConditions} placeholder="알고 계신 질환이 있다면 입력해 주세요" multiline maxLength={2000} />
+    <FormField label="알레르기" value={draftAllergies} onChangeText={setDraftAllergies} placeholder="음식·환경·약물 알레르기 등을 입력해 주세요" multiline maxLength={2000} />
 
     <Text style={styles.localNotice}>프로필 사진과 한줄 소개는 현재 기기에만 표시돼요.</Text>
     <PrimaryButton label="저장" onPress={handleSave} loading={loading} style={styles.button} />

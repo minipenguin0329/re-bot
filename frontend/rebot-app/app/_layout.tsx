@@ -3,14 +3,13 @@ import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
-import { CartProvider } from '@/src/store/CartContext';
 import { AuthProvider, useAuth } from '@/src/store/AuthContext';
 import { ProfileProvider } from '@/src/store/ProfileContext';
 import { WellnessProvider } from '@/src/store/WellnessContext';
 import { colors } from '@/src/theme/tokens';
 
 export default function RootLayout() {
-  return <GestureHandlerRootView style={styles.root}><AuthProvider><ProfileProvider><WellnessProvider><CartProvider><AppNavigator /></CartProvider></WellnessProvider></ProfileProvider></AuthProvider></GestureHandlerRootView>;
+  return <GestureHandlerRootView style={styles.root}><AuthProvider><ProfileProvider><WellnessProvider><AppNavigator /></WellnessProvider></ProfileProvider></AuthProvider></GestureHandlerRootView>;
 }
 
 function AppNavigator() {
@@ -34,11 +33,8 @@ function AppNavigator() {
       <Stack.Screen name="diagnosis/loading" />
       <Stack.Screen name="diagnosis/candidates" />
       <Stack.Screen name="diagnosis/result" />
-      <Stack.Screen name="diagnosis/product" />
       <Stack.Screen name="solution/suggestion" />
       <Stack.Screen name="solution/feedback" />
-      <Stack.Screen name="market/list" />
-      <Stack.Screen name="market/cart" />
       <Stack.Screen name="profile/edit" />
       <Stack.Screen name="profile/notifications" />
       <Stack.Screen name="profile/report" />
