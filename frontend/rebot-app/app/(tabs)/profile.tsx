@@ -34,14 +34,7 @@ export default function ProfileScreen() {
       <View style={styles.avatar}>{photoUri ? <Image source={{ uri: photoUri }} style={styles.avatarImage} /> : <Ionicons name="person" size={34} color="#9A9A9F" />}</View>
       <View><Text style={styles.name}>{name}</Text><Text style={styles.copy}>{bio}</Text></View>
     </View>
-    {/* DEV_SURVEY_TEST_START: 설문 확인이 끝나면 이 주석 블록 전체를 삭제하세요. */}
-    <Pressable
-      onPress={() => router.push('/onboarding/basic')}
-      style={{ height: 46, marginBottom: 18, borderRadius: 12, borderWidth: 1, borderColor: '#E3D39A', backgroundColor: '#FFF9E7', alignItems: 'center', justifyContent: 'center' }}
-    >
-      <Text style={{ color: '#7C651B', fontSize: 14, fontWeight: '700' }}>초기 설문 다시 보기 (개발용)</Text>
-    </Pressable>
-    {/* DEV_SURVEY_TEST_END */}
+    
     <View style={styles.menu}>{menus.map((item) => <Pressable key={item.label} onPress={() => router.push(item.route)} style={styles.menuRow}><Ionicons name={item.icon} size={22} color="#777" /><Text style={styles.menuText}>{item.label}</Text><Ionicons name="chevron-forward" size={20} color="#BBB" /></Pressable>)}</View>
     <Pressable style={styles.logout} onPress={handleLogout}><Ionicons name="log-out-outline" size={22} /><Text style={styles.logoutText}>로그아웃</Text></Pressable>
   </ScrollView></Screen>;

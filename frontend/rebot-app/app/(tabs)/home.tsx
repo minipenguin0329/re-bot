@@ -15,9 +15,20 @@ const FOLLOW_UP_DELAY_MS = 3 * 60 * 60 * 1000;
 // Expo Go/개발 빌드에서는 UI를 바로 검증할 수 있도록 3시간 대기를 생략합니다.
 // 배포 빌드에서는 false가 되어 기존 3시간 조건이 그대로 적용됩니다.
 const FOLLOW_UP_TEST_MODE = __DEV__;
-// v3로 갱신해 이전 테스트에서 저장된 해결 상태를 한 번 초기화합니다.
-// 이번 테스트에서 '해결됐어요'를 누르면 v3에 저장되어 홈 카드가 사라지고 알림함에 남습니다.
-const RESOLVED_NOTIFICATION_KEY = 'rebot.resolved-follow-up-id.v3';
+const RESOLVED_NOTIFICATION_KEY = 'rebot.resolved-follow-up-id.v4';
+
+// 시연 계정에 분석 기록이 없어도 후속 조치 흐름을 바로 확인할 수 있는 초기 알림입니다.
+// 실제 분석 기록이 하나라도 있으면 이 데이터는 사용하지 않습니다.
+const DEMO_FOLLOW_UP: AnalysisHistoryItem = {
+  id: 'demo-follow-up',
+  symptom_id: 'demo-symptom',
+  symptom_description: '두통',
+  status: 'completed',
+  selection_status: 'candidate',
+  recommendation_action: null,
+  recommendation_created_at: new Date(0).toISOString(),
+  created_at: new Date(0).toISOString(),
+};
 
 function followUpTitle(description: string) {
   const symptom = description.trim();
@@ -40,21 +51,21 @@ export default function HomeScreen() {
         if (!active) return;
         const now = Date.now();
         const latest = items.find((item) => {
-          // 개발 중에는 가장 최근 분석 기록을 바로 사용해 UI 흐름을 검증합니다.
-          if (FOLLOW_UP_TEST_MODE) return true;
-
           if (item.status !== 'completed' || item.selection_status === 'unselected') return false;
           if (!item.recommendation_created_at) return false;
+
+          // 개발 중에는 완료된 기록에 한해 3시간 대기만 생략합니다.
+          if (FOLLOW_UP_TEST_MODE) return true;
 
           const recommendationTime = new Date(item.recommendation_created_at).getTime();
           return Number.isFinite(recommendationTime) && now - recommendationTime >= FOLLOW_UP_DELAY_MS;
         });
-        setFollowUp(latest ?? null);
+        setFollowUp(latest ?? DEMO_FOLLOW_UP);
         setResolvedId(storedResolvedId);
-        if (latest && latest.id === storedResolvedId) setRead(true);
+        if ((latest ?? DEMO_FOLLOW_UP).id === storedResolvedId) setRead(true);
       })
       .catch(() => {
-        if (active) setFollowUp(null);
+        if (active) setFollowUp(DEMO_FOLLOW_UP);
       });
     return () => { active = false; };
   }, []);
@@ -73,11 +84,18 @@ export default function HomeScreen() {
     if (!followUp) return;
     setRead(true);
     setNotificationsOpen(false);
+
+    if (followUp.id === DEMO_FOLLOW_UP.id) {
+      router.push('/history');
+      return;
+    }
+
     router.push({
       pathname: '/history/[id]',
       params: {
         id: followUp.id,
         description: followUp.symptom_description,
+        focusChat: '1',
         ...(followUp.recommendation_action ? { recommendationAction: followUp.recommendation_action } : {}),
       },
     });
@@ -112,10 +130,10 @@ export default function HomeScreen() {
               <Text style={styles.cardCopy}>현재 상태를 확인해볼게요.</Text>
               <View style={styles.followUpActions}>
                 <Pressable style={[styles.followUpButton, styles.resolvedButton]} onPress={() => void resolveFollowUp()}>
-                  <Text style={styles.resolvedButtonText}>해결됐어요</Text>
+                  <Text style={styles.resolvedButtonText}>해결됐습니다</Text>
                 </Pressable>
                 <Pressable style={[styles.followUpButton, styles.stillUnwellButton]} onPress={goAnswer}>
-                  <Text style={styles.stillUnwellButtonText}>아직 불편해요</Text>
+                  <Text style={styles.stillUnwellButtonText}>아쉬웠어요</Text>
                 </Pressable>
               </View>
             </View>

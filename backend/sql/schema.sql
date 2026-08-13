@@ -179,6 +179,8 @@ create index if not exists recommendation_feedback_recommendation_idx
   on public.recommendation_feedback (recommendation_id);
 create index if not exists chat_messages_analysis_sequence_idx
   on public.chat_messages (analysis_id, sequence);
+create index if not exists chat_messages_analysis_created_idx
+  on public.chat_messages (analysis_id, created_at desc);
 create index if not exists reports_user_period_idx
   on public.reports (user_id, period_type, period_start desc);
 create index if not exists products_active_category_idx

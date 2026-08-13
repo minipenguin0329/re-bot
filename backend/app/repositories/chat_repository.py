@@ -4,9 +4,31 @@ from typing import Any
 from uuid import UUID, uuid4
 
 from supabase import Client
+from postgrest.exceptions import APIError
 
 from app.core.exceptions import AppError
-from app.repositories.base import execute_query
+
+
+def _execute_chat_query(query: Any) -> list[dict[str, Any]]:
+    try:
+        response = query.execute()
+    except APIError as exc:
+        if getattr(exc, "code", None) == "PGRST205" and "chat_messages" in str(exc):
+            raise AppError(
+                "CHAT_STORAGE_NOT_READY",
+                "대화 저장소가 준비되지 않았습니다. Supabase 채팅 마이그레이션을 적용해주세요.",
+                503,
+            ) from exc
+        raise AppError(
+            "DATABASE_ERROR", "데이터베이스 요청을 처리하지 못했습니다.", 503
+        ) from exc
+    except AppError:
+        raise
+    except Exception as exc:
+        raise AppError(
+            "DATABASE_ERROR", "데이터베이스 요청을 처리하지 못했습니다.", 503
+        ) from exc
+    return list(getattr(response, "data", None) or [])
 
 
 class ChatRepository:
@@ -16,7 +38,7 @@ class ChatRepository:
     def list_messages(
         self, analysis_id: UUID, limit: int = 100
     ) -> list[dict[str, Any]]:
-        rows = execute_query(
+        rows = _execute_chat_query(
             self.client.table("chat_messages")
             .select("*")
             .eq("analysis_id", str(analysis_id))
@@ -26,6 +48,14 @@ class ChatRepository:
         rows.reverse()
         return rows
 
+    def delete_messages(self, analysis_id: UUID) -> int:
+        rows = _execute_chat_query(
+            self.client.table("chat_messages")
+            .delete()
+            .eq("analysis_id", str(analysis_id))
+        )
+        return len(rows)
+
     def create_turn(
         self,
         analysis_id: UUID,
@@ -34,7 +64,7 @@ class ChatRepository:
         model_name: str,
     ) -> tuple[dict[str, Any], dict[str, Any]]:
         turn_id = str(uuid4())
-        rows = execute_query(
+        rows = _execute_chat_query(
             self.client.table("chat_messages").insert(
                 [
                     {

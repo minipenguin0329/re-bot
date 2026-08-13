@@ -58,6 +58,10 @@ class ChatService:
             messages=[ChatMessageResponse.model_validate(row) for row in rows],
         )
 
+    def delete_messages(self, user_id: UUID, analysis_id: UUID) -> None:
+        self._get_completed_analysis(user_id, analysis_id)
+        ChatRepository(self.client).delete_messages(analysis_id)
+
     async def reply(
         self, user_id: UUID, analysis_id: UUID, content: str
     ) -> ChatReplyResponse:

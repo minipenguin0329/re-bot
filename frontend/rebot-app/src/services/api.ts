@@ -149,6 +149,8 @@ export const backendApi = {
       method: 'POST',
       ...jsonBody({ content }),
     }),
+  deleteAnalysisChat: (analysisId: string) =>
+    request<void>(`/api/analysis/${analysisId}/chat`, { method: 'DELETE' }),
   selectCandidates: (analysisId: string, candidateIds: string[]) =>
     request<{ analysis_id: string; selection_status: 'candidate' | 'none'; selected_candidate_ids: string[] }>(
       `/api/analysis/${analysisId}/select`,

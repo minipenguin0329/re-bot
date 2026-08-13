@@ -34,3 +34,13 @@ async def create_chat_reply(
     return await ChatService(client, openai_service).reply(
         user.id, analysis_id, payload.content
     )
+
+
+@router.delete("", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_chat_messages(
+    analysis_id: UUID,
+    user: AuthenticatedUser,
+    client: DatabaseClient,
+    openai_service: OpenAIServiceDependency,
+) -> None:
+    ChatService(client, openai_service).delete_messages(user.id, analysis_id)
