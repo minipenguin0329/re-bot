@@ -5,7 +5,7 @@ import { useAuth } from '@/src/store/AuthContext';
 import type { MeResponse, ProfileResponse } from '@/src/types/api';
 import { hoursToSleepOption, sleepOptionToHours } from '@/src/utils/profile';
 
-type Notifications = { all: boolean; report: boolean; marketing: boolean };
+type Notifications = { all: boolean; followUp: boolean };
 type Profile = {
   name: string;
   bio: string;
@@ -40,7 +40,7 @@ const defaultProfile: Profile = {
   sleepHours: '',
   knownConditions: '',
   allergies: '',
-  notifications: { all: true, report: true, marketing: false },
+  notifications: { all: true, followUp: true },
 };
 
 const ProfileContext = createContext<ProfileContextValue | null>(null);
@@ -94,7 +94,7 @@ export function ProfileProvider({ children }: PropsWithChildren) {
   const setNotification: ProfileContextValue['setNotification'] = (key, value) =>
     setProfile((current) => {
       if (key === 'all') {
-        return { ...current, notifications: { all: value, report: value, marketing: value } };
+        return { ...current, notifications: { all: value, followUp: value } };
       }
       return { ...current, notifications: { ...current.notifications, [key]: value } };
     });

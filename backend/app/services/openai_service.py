@@ -14,11 +14,9 @@ from app.prompts.recommendation import (
     ALTERNATIVE_INSTRUCTIONS,
     RECOMMENDATION_INSTRUCTIONS,
 )
-from app.prompts.report import REPORT_INSTRUCTIONS
 from app.schemas.analysis import CauseAnalysisResult
 from app.schemas.chat import ChatAnswer
 from app.schemas.recommendation import RecommendationResult
-from app.schemas.report import ReportSummary
 
 SchemaT = TypeVar("SchemaT", bound=BaseModel)
 
@@ -105,9 +103,6 @@ class OpenAIService:
         return await self._parse(
             ALTERNATIVE_INSTRUCTIONS, context, RecommendationResult
         )
-
-    async def create_report(self, context: dict[str, object]) -> ReportSummary:
-        return await self._parse(REPORT_INSTRUCTIONS, context, ReportSummary)
 
     async def create_chat_reply(self, context: dict[str, object]) -> ChatAnswer:
         return await self._parse(CHAT_INSTRUCTIONS, context, ChatAnswer)

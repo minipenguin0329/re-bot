@@ -11,6 +11,11 @@ from pydantic import ValidationError
 from app.core.config import Settings
 from app.core.exceptions import AppError
 from app.schemas.analysis import CauseAnalysisResult, CauseCandidate
+from app.schemas.recommendation import (
+    RecommendationOption,
+    RecommendationResult,
+    SupportResource,
+)
 from app.services.openai_service import OpenAIService
 from tests.conftest import USER_A, USER_B, FakeDatabase
 
@@ -24,9 +29,55 @@ def candidate(number: int = 1) -> CauseCandidate:
     )
 
 
-def test_ai_candidates_cannot_exceed_three() -> None:
+def test_ai_candidates_allow_up_to_eight() -> None:
+    result = CauseAnalysisResult(candidates=[candidate(i) for i in range(8)])
+    assert len(result.candidates) == 8
+
+
+def test_ai_candidates_cannot_exceed_eight() -> None:
     with pytest.raises(ValidationError):
-        CauseAnalysisResult(candidates=[candidate(i) for i in range(4)])
+        CauseAnalysisResult(candidates=[candidate(i) for i in range(9)])
+
+
+def test_recommendations_cannot_exceed_five_including_alternative() -> None:
+    with pytest.raises(ValidationError):
+        RecommendationResult(
+            action="첫 번째 해결책",
+            reason="이유",
+            alternative="대안",
+            additional_solutions=[
+                RecommendationOption(action=f"해결책 {index}", reason="이유")
+                for index in range(4)
+            ],
+        )
+
+
+def test_recommendation_support_resources_are_generic_and_limited() -> None:
+    result = RecommendationResult(
+        action="잠들기 전 조명을 낮추기",
+        reason="취침 환경을 단순하게 조정할 수 있어요.",
+        support_resources=[
+            SupportResource(
+                category="tool",
+                name="따뜻한 색 조명",
+                benefit="밝은 천장 조명 대신 편안한 취침 환경을 만드는 데 도움을 줄 수 있어요.",
+                selection_tip="밝기 조절이 가능한지 확인하세요.",
+            )
+        ],
+    )
+
+    assert result.support_resources[0].category == "tool"
+    assert result.support_resources[0].name == "따뜻한 색 조명"
+
+    with pytest.raises(ValidationError):
+        RecommendationResult(
+            action="작은 행동",
+            reason="이유",
+            support_resources=[
+                SupportResource(category="service", name=f"서비스 {index}", benefit="도움")
+                for index in range(4)
+            ],
+        )
 
 
 class StubResponses:
@@ -382,6 +433,31 @@ def test_select_multiple_candidates(
     }
     assert selected_flags[candidate_a_id] is True
     assert selected_flags[candidate_b_id] is True
+
+
+def test_select_candidates_with_custom_cause(
+    authenticated_client: TestClient, fake_db: FakeDatabase
+) -> None:
+    analysis_id, candidate_a_id, _ = _completed_analysis_with_two_candidates(fake_db)
+
+    response = authenticated_client.post(
+        f"/api/analysis/{analysis_id}/select",
+        json={
+            "candidate_ids": [candidate_a_id],
+            "custom_cause": "최근 야근이 늘었어요",
+        },
+    )
+
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body["selection_status"] == "candidate"
+    assert body["custom_candidate_id"]
+    custom_rows = [
+        row for row in fake_db.tables["analysis_candidates"] if row.get("is_custom")
+    ]
+    assert len(custom_rows) == 1
+    assert custom_rows[0]["title"] == "최근 야근이 늘었어요"
+    assert custom_rows[0]["selected"] is True
 
 
 def test_selecting_none_clears_previous_selection(

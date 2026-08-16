@@ -146,9 +146,17 @@ class AnalysisService:
         analysis = {**analysis, "candidates": repository.list_candidates(analysis_id)}
         return AnalysisResponse.model_validate(analysis)
 
+    def delete_history(self, user_id: UUID, analysis_id: UUID) -> None:
+        if not AnalysisRepository(self.client).delete(user_id, analysis_id):
+            raise AppError("RESOURCE_NOT_FOUND", "삭제할 분석 기록을 찾을 수 없습니다.", 404)
+
     def select_candidates(
-        self, user_id: UUID, analysis_id: UUID, candidate_ids: list[UUID]
-    ) -> dict[str, Any]:
+        self,
+        user_id: UUID,
+        analysis_id: UUID,
+        candidate_ids: list[UUID],
+        custom_cause: str | None = None,
+    ) -> tuple[dict[str, Any], UUID | None]:
         repository = AnalysisRepository(self.client)
         analysis = repository.get(user_id, analysis_id)
         if analysis is None:
@@ -160,7 +168,17 @@ class AnalysisService:
                 raise AppError(
                     "RESOURCE_FORBIDDEN", "이 분석에 속하지 않은 후보입니다.", 403
                 )
-        updated = repository.select_candidates(user_id, analysis_id, candidate_ids)
+        normalized_custom_cause = custom_cause.strip() if custom_cause else None
+        custom_candidate = repository.replace_custom_candidate(
+            analysis_id, normalized_custom_cause
+        )
+        selected_ids = list(candidate_ids)
+        custom_candidate_id = None
+        if custom_candidate:
+            custom_candidate_id = UUID(str(custom_candidate["id"]))
+            selected_ids.append(custom_candidate_id)
+
+        updated = repository.select_candidates(user_id, analysis_id, selected_ids)
         if updated is None:
             raise AppError("RESOURCE_NOT_FOUND", "분석 기록을 찾을 수 없습니다.", 404)
-        return updated
+        return updated, custom_candidate_id

@@ -9,6 +9,8 @@ from app.schemas.profile import (
     ProfileResponse,
     ProfileUpdate,
 )
+from app.schemas.wellness_profile import WellnessProfileResponse
+from app.services.wellness_profile_service import WellnessProfileService
 
 router = APIRouter(tags=["profile"])
 
@@ -21,6 +23,13 @@ async def get_me(user: AuthenticatedUser, client: DatabaseClient) -> MeResponse:
         email=user.email,
         profile=ProfileResponse.model_validate(profile) if profile else None,
     )
+
+
+@router.get("/profile/wellness", response_model=WellnessProfileResponse)
+async def get_wellness_profile(
+    user: AuthenticatedUser, client: DatabaseClient
+) -> WellnessProfileResponse:
+    return WellnessProfileService(client).get(user.id)
 
 
 @router.post("/profile", response_model=ProfileResponse, status_code=status.HTTP_201_CREATED)

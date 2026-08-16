@@ -8,7 +8,6 @@ from app.api.routes.logs import router as logs_router
 from app.api.routes.profile import router as profile_router
 from app.api.routes.products import router as products_router
 from app.api.routes.recommendations import router as recommendations_router
-from app.api.routes.reports import router as reports_router
 from app.api.routes.symptoms import router as symptoms_router
 from app.core.config import get_settings
 from app.core.exceptions import RequestIdMiddleware, register_exception_handlers
@@ -42,7 +41,6 @@ def create_app() -> FastAPI:
     application.include_router(analysis_router, prefix="/api")
     application.include_router(chats_router, prefix="/api")
     application.include_router(recommendations_router, prefix="/api")
-    application.include_router(reports_router, prefix="/api")
     application.include_router(products_router, prefix="/api")
     return application
 

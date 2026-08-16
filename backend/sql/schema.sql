@@ -76,12 +76,13 @@ create table if not exists public.analyses (
 create table if not exists public.analysis_candidates (
   id uuid primary key default gen_random_uuid(),
   analysis_id uuid not null references public.analyses(id) on delete cascade,
-  rank integer not null check (rank between 1 and 3),
+  rank integer not null check (rank between 1 and 9),
   title text not null,
   reason text not null,
   evidence jsonb not null default '[]'::jsonb check (jsonb_typeof(evidence) = 'array'),
   confirmation_question text not null,
   selected boolean not null default false,
+  is_custom boolean not null default false,
   created_at timestamptz not null default timezone('utc', now()),
   unique (analysis_id, rank)
 );
@@ -96,6 +97,16 @@ create table if not exists public.recommendations (
   duration_minutes integer check (duration_minutes is null or duration_minutes between 1 and 1440),
   difficulty text check (difficulty is null or difficulty in ('easy', 'medium', 'hard')),
   alternative text,
+  additional_solutions jsonb not null default '[]'::jsonb
+    check (
+      jsonb_typeof(additional_solutions) = 'array'
+      and jsonb_array_length(additional_solutions) <= 4
+    ),
+  support_resources jsonb not null default '[]'::jsonb
+    check (
+      jsonb_typeof(support_resources) = 'array'
+      and jsonb_array_length(support_resources) <= 3
+    ),
   created_at timestamptz not null default timezone('utc', now())
 );
 
@@ -122,19 +133,6 @@ create table if not exists public.chat_messages (
     (role = 'user' and model_name is null)
     or (role = 'assistant' and model_name is not null)
   )
-);
-
-create table if not exists public.reports (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references auth.users(id) on delete cascade,
-  period_type text not null check (period_type in ('weekly', 'monthly')),
-  period_start date not null,
-  period_end date not null,
-  statistics jsonb not null default '{}'::jsonb check (jsonb_typeof(statistics) = 'object'),
-  summary jsonb not null default '{}'::jsonb check (jsonb_typeof(summary) = 'object'),
-  created_at timestamptz not null default timezone('utc', now()),
-  check (period_start <= period_end),
-  unique (user_id, period_type, period_start, period_end)
 );
 
 create table if not exists public.products (
@@ -181,8 +179,6 @@ create index if not exists chat_messages_analysis_sequence_idx
   on public.chat_messages (analysis_id, sequence);
 create index if not exists chat_messages_analysis_created_idx
   on public.chat_messages (analysis_id, created_at desc);
-create index if not exists reports_user_period_idx
-  on public.reports (user_id, period_type, period_start desc);
 create index if not exists products_active_category_idx
   on public.products (active, category);
 
@@ -204,7 +200,6 @@ alter table public.analysis_candidates enable row level security;
 alter table public.recommendations enable row level security;
 alter table public.recommendation_feedback enable row level security;
 alter table public.chat_messages enable row level security;
-alter table public.reports enable row level security;
 alter table public.products enable row level security;
 
 -- Re-runnable policy creation.
@@ -216,8 +211,7 @@ begin
     'profiles_own_rows', 'daily_logs_own_rows', 'symptoms_own_rows',
     'analyses_own_rows', 'analysis_candidates_own_rows',
     'recommendations_own_rows', 'recommendation_feedback_own_rows',
-    'chat_messages_own_analysis',
-    'reports_own_rows', 'products_read_active'
+    'chat_messages_own_analysis', 'products_read_active'
   ] loop
     execute format('drop policy if exists %I on public.%I', policy_name,
       case policy_name
@@ -229,7 +223,6 @@ begin
         when 'recommendations_own_rows' then 'recommendations'
         when 'recommendation_feedback_own_rows' then 'recommendation_feedback'
         when 'chat_messages_own_analysis' then 'chat_messages'
-        when 'reports_own_rows' then 'reports'
         else 'products'
       end
     );
@@ -283,9 +276,6 @@ create policy chat_messages_own_analysis on public.chat_messages
         and analyses.user_id = (select auth.uid())
     )
   );
-create policy reports_own_rows on public.reports
-  for all to authenticated
-  using ((select auth.uid()) = user_id) with check ((select auth.uid()) = user_id);
 create policy products_read_active on public.products
   for select using (active = true);
 
