@@ -15,7 +15,6 @@ from app.main import app
 from app.schemas.analysis import CauseAnalysisResult, CauseCandidate
 from app.schemas.chat import ChatAnswer
 from app.schemas.recommendation import RecommendationResult
-from app.schemas.report import ReportSummary
 from app.services.openai_service import get_openai_service
 
 USER_A = UUID("11111111-1111-1111-1111-111111111111")
@@ -120,6 +119,9 @@ class FakeQuery:
             row.setdefault("image_path", None)
         if self.table == "analysis_candidates":
             row.setdefault("selected", False)
+            row.setdefault("is_custom", False)
+        if self.table == "recommendations":
+            row.setdefault("additional_solutions", [])
         return row
 
     def execute(self) -> SimpleNamespace:
@@ -201,6 +203,14 @@ class FakeOpenAIService:
             duration_minutes=10,
             difficulty="easy",
             alternative="잠들기 전 화면을 5분만 먼저 꺼보세요.",
+            additional_solutions=[
+                {
+                    "action": "오후 늦게 카페인을 줄여보세요.",
+                    "reason": "수면을 방해할 수 있는 생활 요인을 함께 줄이기 위한 제안입니다.",
+                    "duration_minutes": None,
+                    "difficulty": "easy",
+                }
+            ],
         )
 
     async def create_alternative(self, _: dict[str, object]) -> RecommendationResult:
@@ -210,13 +220,6 @@ class FakeOpenAIService:
             duration_minutes=1,
             difficulty="easy",
             alternative="깊게 세 번 호흡해 보세요.",
-        )
-
-    async def create_report(self, _: dict[str, object]) -> ReportSummary:
-        return ReportSummary(
-            overview="서버에서 계산한 이번 기간의 생활 기록 요약입니다.",
-            observations=["기록된 날의 수면과 스트레스 추이를 함께 확인해보세요."],
-            disclaimer="이 요약만으로 인과관계나 질병을 판단할 수 없습니다.",
         )
 
     async def create_chat_reply(self, _: dict[str, object]) -> ChatAnswer:

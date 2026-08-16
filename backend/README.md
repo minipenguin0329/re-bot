@@ -96,6 +96,7 @@ Supabase Auth로 검증하고 사용자 ID를 결정합니다.
 | GET | `/health` | 서버 상태 |
 | GET | `/api/me` | 현재 인증 사용자와 프로필 |
 | POST/PATCH | `/api/profile` | 프로필 생성/수정 |
+| GET | `/api/profile/wellness` | 반복 증상 빈도와 등록 건강 정보 조회 |
 | POST/GET | `/api/logs` | 생활 기록 생성/목록, `?days=7` 지원 |
 | GET/PATCH/DELETE | `/api/logs/{id}` | 본인 생활 기록 조회/수정/삭제 |
 | POST/GET | `/api/symptoms` | 증상 생성/목록 |
@@ -110,8 +111,6 @@ Supabase Auth로 검증하고 사용자 ID를 결정합니다.
 | POST | `/api/recommendations` | 선택 결과에 맞춘 작은 행동 생성 |
 | POST | `/api/recommendations/{id}/feedback` | positive/negative 피드백 저장 |
 | POST | `/api/recommendations/{id}/alternative` | 부정 피드백 기반 더 작은 대안 생성 |
-| GET | `/api/reports/weekly` | 최근 7일 리포트 생성/저장 |
-| GET | `/api/reports/monthly` | 이번 달 리포트 생성/저장 |
 | GET | `/api/products` | 동의 후 활성 제품 목록 |
 | GET | `/api/products/search?q=` | 동의 후 제품명 검색 |
 | GET | `/api/products/recommended?tags=` | 동의 후 DB 태그 제품 조회 |
@@ -186,7 +185,7 @@ pytest
 
 - `app/api/routes`: HTTP endpoint
 - `app/schemas`: Pydantic request/response 및 AI Structured Output
-- `app/services`: 분석, 추천, 리포트, Storage 비즈니스 로직
+- `app/services`: 분석, 추천, 웰니스 프로필, Storage 비즈니스 로직
 - `app/repositories`: ownership 조건이 포함된 Supabase 쿼리
 - `app/prompts`: 의료 진단을 방지하는 AI 지침
 - `app/core`: 환경설정, 인증, 통일 오류 처리

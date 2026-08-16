@@ -49,6 +49,16 @@ async def get_analysis(
     return AnalysisService(client, openai_service).get_detail(user.id, analysis_id)
 
 
+@router.delete("/{analysis_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_analysis(
+    analysis_id: UUID,
+    user: AuthenticatedUser,
+    client: DatabaseClient,
+    openai_service: OpenAIServiceDependency,
+) -> None:
+    AnalysisService(client, openai_service).delete_history(user.id, analysis_id)
+
+
 @router.post("/{analysis_id}/select", response_model=CandidateSelectionResponse)
 async def select_candidate(
     analysis_id: UUID,
@@ -57,12 +67,13 @@ async def select_candidate(
     client: DatabaseClient,
     openai_service: OpenAIServiceDependency,
 ) -> CandidateSelectionResponse:
-    row = AnalysisService(client, openai_service).select_candidates(
-        user.id, analysis_id, payload.candidate_ids
+    row, custom_candidate_id = AnalysisService(client, openai_service).select_candidates(
+        user.id, analysis_id, payload.candidate_ids, payload.custom_cause
     )
     return CandidateSelectionResponse(
         analysis_id=analysis_id,
         selection_status=row["selection_status"],
         selected_candidate_ids=payload.candidate_ids,
+        custom_candidate_id=custom_candidate_id,
     )
 

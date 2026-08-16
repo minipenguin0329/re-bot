@@ -16,7 +16,7 @@ type WellnessContextValue = {
   diagnosisDraft: DiagnosisDraft | null;
   prepareDiagnosis: (draft: DiagnosisDraft) => void;
   runPreparedDiagnosis: () => Promise<AnalysisResponse>;
-  chooseCandidate: (candidateIds: string[]) => Promise<RecommendationResponse>;
+  chooseCandidate: (candidateIds: string[], customCause?: string) => Promise<RecommendationResponse>;
   requestKnownCauseSolution: (situation: string) => Promise<RecommendationResponse>;
   sendFeedback: (feedback: 'positive' | 'negative', reason?: string) => Promise<void>;
   requestAlternative: (reason?: string) => Promise<RecommendationResponse>;
@@ -53,9 +53,9 @@ export function WellnessProvider({ children }: PropsWithChildren) {
     return result;
   };
 
-  const chooseCandidate = async (candidateIds: string[]) => {
+  const chooseCandidate = async (candidateIds: string[], customCause?: string) => {
     if (!analysis) throw new Error('완료된 분석 정보가 없습니다.');
-    await backendApi.selectCandidates(analysis.id, candidateIds);
+    await backendApi.selectCandidates(analysis.id, candidateIds, customCause);
     const result = await backendApi.createRecommendation(analysis.id);
     setRecommendation(result);
     return result;

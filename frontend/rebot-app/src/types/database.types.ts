@@ -69,6 +69,7 @@ export type Database = {
           created_at: string
           evidence: Json
           id: string
+          is_custom: boolean
           rank: number
           reason: string
           title: string
@@ -79,6 +80,7 @@ export type Database = {
           created_at?: string
           evidence?: Json
           id?: string
+          is_custom?: boolean
           rank: number
           reason: string
           title: string
@@ -89,6 +91,7 @@ export type Database = {
           created_at?: string
           evidence?: Json
           id?: string
+          is_custom?: boolean
           rank?: number
           reason?: string
           title?: string
@@ -264,6 +267,7 @@ export type Database = {
       recommendations: {
         Row: {
           action: string
+          additional_solutions: Json
           alternative: string | null
           analysis_id: string
           candidate_id: string | null
@@ -276,6 +280,7 @@ export type Database = {
         }
         Insert: {
           action: string
+          additional_solutions?: Json
           alternative?: string | null
           analysis_id: string
           candidate_id?: string | null
@@ -288,6 +293,7 @@ export type Database = {
         }
         Update: {
           action?: string
+          additional_solutions?: Json
           alternative?: string | null
           analysis_id?: string
           candidate_id?: string | null

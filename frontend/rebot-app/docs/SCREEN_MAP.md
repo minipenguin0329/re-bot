@@ -18,7 +18,7 @@
 | 마켓 | `/market/list` | 카테고리별 전체 상품 (더보기) |
 | 마켓 | `/market/cart` | 장바구니 |
 | 마이페이지 | `/(tabs)/profile` | 회원 메뉴 |
-| 리포트 | `/profile/report` | UI 시안용 건강 리포트 |
+| 마이페이지 | `/profile/wellness` | 반복 증상과 등록 건강 정보를 확인하는 웰니스 프로필 |
 | 마이페이지 | `/profile/edit` | 회원정보 수정 (아이디·한줄소개·프로필 사진) |
 | 마이페이지 | `/profile/notifications` | 알림 설정 on/off |
 | 마이페이지 | `/profile/support` | 고객센터 메뉴 |

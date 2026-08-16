@@ -4,7 +4,7 @@ import { Screen } from '@/src/components/Screen';
 import { useProfile } from '@/src/store/ProfileContext';
 import { colors } from '@/src/theme/tokens';
 
-const rows = [{ key: 'all', label: '전체 알림', description: '모든 알림을 한번에 켜거나 꺼요' }, { key: 'report', label: '리포트 알림', description: '주간·월간 건강 리포트가 준비되면 알려드려요' }, { key: 'marketing', label: '마케팅 알림', description: '추천 제품·이벤트 소식을 받아요' }] as const;
+const rows = [{ key: 'all', label: '전체 알림', description: '모든 알림을 한번에 켜거나 꺼요' }, { key: 'followUp', label: '후속 조치 알림', description: '증상 확인이 필요할 때 알려드려요' }] as const;
 
 export default function NotificationSettingsScreen() {
   const { notifications, setNotification } = useProfile();

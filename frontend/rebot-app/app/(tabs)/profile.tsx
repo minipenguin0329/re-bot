@@ -9,7 +9,7 @@ import { useAuth } from '@/src/store/AuthContext';
 import { useProfile } from '@/src/store/ProfileContext';
 import { colors } from '@/src/theme/tokens';
 
-const menus = [{ label: '회원정보 수정', icon: 'person-outline', route: '/profile/edit' }, { label: '대화 내역', icon: 'time-outline', route: '/history' }, { label: 'AI 건강 리포트', icon: 'document-text-outline', route: '/profile/report' }, { label: '알림 설정', icon: 'notifications-outline', route: '/profile/notifications' }, { label: '고객센터', icon: 'help-circle-outline', route: '/profile/support' }] as const;
+const menus = [{ label: '회원정보 수정', icon: 'person-outline', route: '/profile/edit' }, { label: '대화 내역', icon: 'time-outline', route: '/history' }, { label: '웰니스 프로필', icon: 'bar-chart-outline', route: '/profile/wellness' }, { label: '알림 설정', icon: 'notifications-outline', route: '/profile/notifications' }, { label: '고객센터', icon: 'help-circle-outline', route: '/profile/support' }] as const;
 
 export default function ProfileScreen() {
   const { signOut } = useAuth();

@@ -52,6 +52,36 @@ class AnalysisRepository:
             return []
         return execute_query(self.client.table("analysis_candidates").insert(payload))
 
+    def replace_custom_candidate(
+        self, analysis_id: UUID, custom_cause: str | None
+    ) -> dict[str, Any] | None:
+        execute_query(
+            self.client.table("analysis_candidates")
+            .delete()
+            .eq("analysis_id", str(analysis_id))
+            .eq("is_custom", True)
+        )
+        if not custom_cause:
+            return None
+
+        candidates = self.list_candidates(analysis_id)
+        next_rank = max((int(item.get("rank", 0)) for item in candidates), default=0) + 1
+        rows = execute_query(
+            self.client.table("analysis_candidates").insert(
+                {
+                    "analysis_id": str(analysis_id),
+                    "rank": next_rank,
+                    "title": custom_cause,
+                    "reason": "사용자가 직접 입력한 의심 원인입니다.",
+                    "evidence": [],
+                    "confirmation_question": "직접 입력한 원인과 현재 상황이 관련 있다고 느끼시나요?",
+                    "selected": True,
+                    "is_custom": True,
+                }
+            )
+        )
+        return rows[0]
+
     def get(self, user_id: UUID, analysis_id: UUID) -> dict[str, Any] | None:
         rows = execute_query(
             self.client.table("analyses")
@@ -70,6 +100,15 @@ class AnalysisRepository:
             .order("created_at", desc=True)
             .limit(limit)
         )
+
+    def delete(self, user_id: UUID, analysis_id: UUID) -> bool:
+        rows = execute_query(
+            self.client.table("analyses")
+            .delete()
+            .eq("id", str(analysis_id))
+            .eq("user_id", str(user_id))
+        )
+        return bool(rows)
 
     def list_candidates(self, analysis_id: UUID) -> list[dict[str, Any]]:
         return execute_query(

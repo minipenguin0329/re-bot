@@ -13,8 +13,8 @@ import type {
   ProfilePayload,
   ProfileResponse,
   RecommendationResponse,
-  ReportResponse,
   SymptomResponse,
+  WellnessProfileResponse,
 } from '@/src/types/api';
 
 const rawApiBaseUrl = process.env.EXPO_PUBLIC_API_BASE_URL?.trim();
@@ -142,6 +142,8 @@ export const backendApi = {
     }),
   listAnalyses: () => request<AnalysisHistoryItem[]>('/api/analysis'),
   getAnalysis: (analysisId: string) => request<AnalysisResponse>(`/api/analysis/${analysisId}`),
+  deleteAnalysis: (analysisId: string) =>
+    request<void>(`/api/analysis/${analysisId}`, { method: 'DELETE' }),
   getAnalysisChat: (analysisId: string) =>
     request<ChatHistoryResponse>(`/api/analysis/${analysisId}/chat`),
   sendAnalysisChatMessage: (analysisId: string, content: string) =>
@@ -151,10 +153,10 @@ export const backendApi = {
     }),
   deleteAnalysisChat: (analysisId: string) =>
     request<void>(`/api/analysis/${analysisId}/chat`, { method: 'DELETE' }),
-  selectCandidates: (analysisId: string, candidateIds: string[]) =>
-    request<{ analysis_id: string; selection_status: 'candidate' | 'none'; selected_candidate_ids: string[] }>(
+  selectCandidates: (analysisId: string, candidateIds: string[], customCause?: string) =>
+    request<{ analysis_id: string; selection_status: 'candidate' | 'none'; selected_candidate_ids: string[]; custom_candidate_id: string | null }>(
       `/api/analysis/${analysisId}/select`,
-      { method: 'POST', ...jsonBody({ candidate_ids: candidateIds }) },
+      { method: 'POST', ...jsonBody({ candidate_ids: candidateIds, custom_cause: customCause?.trim() || null }) },
     ),
   createRecommendation: (analysisId: string) =>
     request<RecommendationResponse>('/api/recommendations', {
@@ -170,7 +172,7 @@ export const backendApi = {
     request<RecommendationResponse>(`/api/recommendations/${recommendationId}/alternative`, {
       method: 'POST',
     }),
-  getWeeklyReport: () => request<ReportResponse>('/api/reports/weekly'),
+  getWellnessProfile: () => request<WellnessProfileResponse>('/api/profile/wellness'),
   listProducts: () => request<ProductResponse[]>('/api/products?consent=true'),
   searchProducts: (query: string) =>
     request<ProductResponse[]>(`/api/products/search?q=${encodeURIComponent(query)}&consent=true`),

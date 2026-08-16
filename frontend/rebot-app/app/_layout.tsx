@@ -37,7 +37,7 @@ function AppNavigator() {
       <Stack.Screen name="solution/feedback" />
       <Stack.Screen name="profile/edit" />
       <Stack.Screen name="profile/notifications" />
-      <Stack.Screen name="profile/report" />
+      <Stack.Screen name="profile/wellness" />
       <Stack.Screen name="profile/support" />
       <Stack.Screen name="profile/support/email" />
       <Stack.Screen name="profile/support/terms" />

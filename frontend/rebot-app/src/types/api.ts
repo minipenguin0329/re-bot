@@ -59,6 +59,7 @@ export type AnalysisCandidate = {
   evidence: string[];
   confirmation_question: string;
   selected: boolean;
+  is_custom: boolean;
   created_at: string;
 };
 
@@ -115,7 +116,23 @@ export type RecommendationResponse = {
   duration_minutes: number | null;
   difficulty: 'easy' | 'medium' | 'hard' | null;
   alternative: string | null;
+  additional_solutions: RecommendationSolution[];
+  support_resources: RecommendationSupportResource[];
   created_at: string;
+};
+
+export type RecommendationSolution = {
+  action: string;
+  reason: string;
+  duration_minutes: number | null;
+  difficulty: 'easy' | 'medium' | 'hard' | null;
+};
+
+export type RecommendationSupportResource = {
+  category: 'tool' | 'service';
+  name: string;
+  benefit: string;
+  selection_tip: string | null;
 };
 
 export type FeedbackResponse = {
@@ -127,26 +144,22 @@ export type FeedbackResponse = {
   created_at: string;
 };
 
-export type ReportResponse = {
-  id: string;
-  user_id: string;
-  period_type: 'weekly' | 'monthly';
-  period_start: string;
-  period_end: string;
-  statistics: {
-    recorded_days: number;
-    average_sleep_hours: number | null;
-    average_stress_level: number | null;
-    exercise_days: number;
-    symptom_count: number;
-    late_meal_count: number;
-  };
-  summary: {
-    overview: string;
-    observations: string[];
-    disclaimer: string;
-  };
-  created_at: string;
+export type SymptomFrequency = {
+  symptom_name: string;
+  occurrence_count: number;
+  last_occurred_at: string;
+  repeated_marked: boolean;
+};
+
+export type WellnessProfileResponse = {
+  known_conditions: string | null;
+  allergies: string | null;
+  symptom_frequencies: SymptomFrequency[];
+  total_symptom_records: number;
+  period_start: string | null;
+  period_end: string | null;
+  last_aggregated_at: string;
+  medical_guidance_recommended: boolean;
 };
 
 export type ProductResponse = {

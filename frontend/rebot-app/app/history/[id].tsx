@@ -1,9 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -11,6 +12,7 @@ import {
   StyleSheet,
   Text,
   TextInput,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import { AppHeader } from '@/src/components/AppHeader';
@@ -29,7 +31,9 @@ export default function HistoryDetailScreen() {
     focusChat?: string;
   }>();
   const insets = useSafeAreaInsets();
+  const { height: viewportHeight } = useWindowDimensions();
   const scrollRef = useRef<ScrollView>(null);
+  const inputRef = useRef<TextInput>(null);
   const [analysis, setAnalysis] = useState<AnalysisResponse | null>(null);
   const [messages, setMessages] = useState<ChatMessageResponse[]>([]);
   const [draft, setDraft] = useState('');
@@ -38,6 +42,7 @@ export default function HistoryDetailScreen() {
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [chatError, setChatError] = useState<string | null>(null);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const hasFocusedChat = useRef(false);
 
@@ -75,6 +80,27 @@ export default function HistoryDetailScreen() {
   useEffect(() => { void load(); }, [load]);
 
   useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const showSubscription = Keyboard.addListener(showEvent, (event) => {
+      setKeyboardHeight(Math.min(event.endCoordinates.height, viewportHeight));
+      requestAnimationFrame(() => scrollRef.current?.scrollToEnd({ animated: true }));
+    });
+    const hideSubscription = Keyboard.addListener(hideEvent, () => {
+      setKeyboardHeight(0);
+      inputRef.current?.blur();
+      requestAnimationFrame(() => {
+        scrollRef.current?.scrollToEnd({ animated: false });
+      });
+    });
+
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
+    };
+  }, [viewportHeight]);
+
+  useEffect(() => {
     if (loading || focusChat !== '1' || hasFocusedChat.current) return;
     hasFocusedChat.current = true;
     const timer = setTimeout(() => {
@@ -102,11 +128,11 @@ export default function HistoryDetailScreen() {
     }
   };
 
-  const deleteChat = () => {
-    if (messages.length === 0 || deleting) return;
+  const deleteHistory = () => {
+    if (deleting) return;
     Alert.alert(
       '대화 내역을 삭제할까요?',
-      '삭제한 대화는 복구할 수 없어요.',
+      '분석 결과와 AI 대화를 포함한 이 기록이 모두 삭제되며 복구할 수 없어요.',
       [
         { text: '취소', style: 'cancel' },
         {
@@ -115,9 +141,9 @@ export default function HistoryDetailScreen() {
           onPress: () => {
             setDeleting(true);
             setChatError(null);
-            void backendApi.deleteAnalysisChat(id)
-              .then(() => setMessages([]))
-              .catch((caught) => setChatError(getErrorMessage(caught)))
+            void backendApi.deleteAnalysis(id)
+              .then(() => router.replace('/history'))
+              .catch((caught) => Alert.alert('삭제 실패', getErrorMessage(caught)))
               .finally(() => setDeleting(false));
           },
         },
@@ -134,18 +160,26 @@ export default function HistoryDetailScreen() {
     </View></Screen>;
   }
 
+  // Android의 resize 모드가 키보드 툴바까지 포함한 실제 IME 높이를 반영합니다.
+  // 열린 상태에서는 화면 높이에 비례한 작은 간격만 남기고, 닫히면 시스템 안전영역을 복원합니다.
+  const keyboardGap = keyboardHeight > 0
+    ? Math.max(8, Math.min(14, Math.round(viewportHeight * 0.015)))
+    : Math.max(insets.bottom, 10);
+  const keyboardOpen = keyboardHeight > 0;
+
   return <Screen bottomSafe={false}>
     <KeyboardAvoidingView
       style={styles.flex}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior={Platform.OS === 'ios' ? 'padding' : keyboardOpen ? 'height' : undefined}
+      enabled={Platform.OS === 'ios' || keyboardOpen}
       keyboardVerticalOffset={0}
     >
       <AppHeader
         title="대화 내역"
         back
         rightIcon="trash-outline"
-        onRightPress={deleteChat}
-        rightDisabled={messages.length === 0 || deleting}
+        onRightPress={deleteHistory}
+        rightDisabled={deleting}
       />
       <ScrollView
         ref={scrollRef}
@@ -187,8 +221,9 @@ export default function HistoryDetailScreen() {
         </View>
       </ScrollView>
       {chatError && <Text style={styles.chatError}>{chatError}</Text>}
-      <View style={[styles.composer, { paddingBottom: Math.max(insets.bottom, 10) }]}>
+      <View style={[styles.composer, { paddingBottom: keyboardGap }]}>
         <TextInput
+          ref={inputRef}
           value={draft}
           onChangeText={setDraft}
           onFocus={() => requestAnimationFrame(() => scrollRef.current?.scrollToEnd({ animated: true }))}

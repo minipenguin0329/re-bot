@@ -15,7 +15,7 @@ class CauseCandidate(BaseModel):
 
 
 class CauseAnalysisResult(BaseModel):
-    candidates: Annotated[list[CauseCandidate], Field(max_length=3)]
+    candidates: Annotated[list[CauseCandidate], Field(max_length=8)]
 
     model_config = ConfigDict(extra="forbid")
 
@@ -27,8 +27,9 @@ class AnalysisCreate(BaseModel):
 class AnalysisCandidateResponse(CauseCandidate):
     id: UUID
     analysis_id: UUID
-    rank: int = Field(ge=1, le=3)
+    rank: int = Field(ge=1, le=9)
     selected: bool = False
+    is_custom: bool = False
     created_at: datetime
 
 
@@ -44,13 +45,15 @@ class AnalysisResponse(BaseModel):
 
 
 class CandidateSelectionRequest(BaseModel):
-    candidate_ids: Annotated[list[UUID], Field(default_factory=list, max_length=3)]
+    candidate_ids: Annotated[list[UUID], Field(default_factory=list, max_length=8)]
+    custom_cause: Annotated[str, Field(min_length=1, max_length=500)] | None = None
 
 
 class CandidateSelectionResponse(BaseModel):
     analysis_id: UUID
     selection_status: Literal["candidate", "none"]
     selected_candidate_ids: list[UUID] = []
+    custom_candidate_id: UUID | None = None
 
 
 class AnalysisHistoryItem(BaseModel):
