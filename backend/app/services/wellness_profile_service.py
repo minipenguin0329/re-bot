@@ -70,7 +70,12 @@ class WellnessProfileService:
 
     def get(self, user_id: UUID) -> WellnessProfileResponse:
         profile = ProfileRepository(self.client).get(user_id)
-        symptoms = SymptomRepository(self.client).list(user_id)
+        # AI 솔루션(이미 원인을 아는 상황) 기록은 대화 내역과 마찬가지로 반복 증상 집계에서도 제외합니다.
+        symptoms = [
+            item
+            for item in SymptomRepository(self.client).list(user_id)
+            if item.get("category") != "known_cause_situation"
+        ]
         frequencies = aggregate_symptoms(symptoms)
         occurred_at = [
             _parse_datetime(item["created_at"])

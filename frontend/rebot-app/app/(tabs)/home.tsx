@@ -16,6 +16,7 @@ const FOLLOW_UP_DELAY_MS = 3 * 60 * 60 * 1000;
 // 배포 빌드에서는 false가 되어 기존 3시간 조건이 그대로 적용됩니다.
 const FOLLOW_UP_TEST_MODE = __DEV__;
 const RESOLVED_NOTIFICATION_KEY = 'rebot.resolved-follow-up-id.v4';
+const ANSWERED_NOTIFICATION_KEY = 'rebot.answered-follow-up-id.v1';
 
 // 시연 계정에 분석 기록이 없어도 후속 조치 흐름을 바로 확인할 수 있는 초기 알림입니다.
 // 실제 분석 기록이 하나라도 있으면 이 데이터는 사용하지 않습니다.
@@ -41,13 +42,18 @@ export default function HomeScreen() {
   const { causes, loading: mindMapLoading } = useMindMapCauses();
   const [followUp, setFollowUp] = useState<AnalysisHistoryItem | null>(null);
   const [resolvedId, setResolvedId] = useState<string | null>(null);
+  const [answeredId, setAnsweredId] = useState<string | null>(null);
   const [read, setRead] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
 
   useEffect(() => {
     let active = true;
-    Promise.all([backendApi.listAnalyses(), AsyncStorage.getItem(RESOLVED_NOTIFICATION_KEY)])
-      .then(([items, storedResolvedId]) => {
+    Promise.all([
+      backendApi.listAnalyses(),
+      AsyncStorage.getItem(RESOLVED_NOTIFICATION_KEY),
+      AsyncStorage.getItem(ANSWERED_NOTIFICATION_KEY),
+    ])
+      .then(([items, storedResolvedId, storedAnsweredId]) => {
         if (!active) return;
         const now = Date.now();
         const latest = items.find((item) => {
@@ -60,9 +66,11 @@ export default function HomeScreen() {
           const recommendationTime = new Date(item.recommendation_created_at).getTime();
           return Number.isFinite(recommendationTime) && now - recommendationTime >= FOLLOW_UP_DELAY_MS;
         });
+        const latestId = (latest ?? DEMO_FOLLOW_UP).id;
         setFollowUp(latest ?? DEMO_FOLLOW_UP);
         setResolvedId(storedResolvedId);
-        if ((latest ?? DEMO_FOLLOW_UP).id === storedResolvedId) setRead(true);
+        setAnsweredId(storedAnsweredId);
+        if (latestId === storedResolvedId || latestId === storedAnsweredId) setRead(true);
       })
       .catch(() => {
         if (active) setFollowUp(DEMO_FOLLOW_UP);
@@ -71,7 +79,9 @@ export default function HomeScreen() {
   }, []);
 
   const isResolved = Boolean(followUp && followUp.id === resolvedId);
-  const visibleFollowUp = followUp && !isResolved ? followUp : null;
+  const isAnswered = Boolean(followUp && followUp.id === answeredId);
+  // 해결됐습니다/아직 안 나았어요 둘 중 하나라도 누르면 홈 화면 카드에서는 사라지고, 알림에서만 다시 볼 수 있습니다.
+  const visibleFollowUp = followUp && !isResolved && !isAnswered ? followUp : null;
   const resolveFollowUp = async () => {
     if (!followUp) return;
     setResolvedId(followUp.id);
@@ -82,8 +92,10 @@ export default function HomeScreen() {
 
   const goAnswer = () => {
     if (!followUp) return;
+    setAnsweredId(followUp.id);
     setRead(true);
     setNotificationsOpen(false);
+    void AsyncStorage.setItem(ANSWERED_NOTIFICATION_KEY, followUp.id);
 
     if (followUp.id === DEMO_FOLLOW_UP.id) {
       router.push('/history');
@@ -96,7 +108,6 @@ export default function HomeScreen() {
         id: followUp.id,
         description: followUp.symptom_description,
         focusChat: '1',
-        ...(followUp.recommendation_action ? { recommendationAction: followUp.recommendation_action } : {}),
       },
     });
   };
@@ -133,7 +144,7 @@ export default function HomeScreen() {
                   <Text style={styles.resolvedButtonText}>해결됐습니다</Text>
                 </Pressable>
                 <Pressable style={[styles.followUpButton, styles.stillUnwellButton]} onPress={goAnswer}>
-                  <Text style={styles.stillUnwellButtonText}>아쉬웠어요</Text>
+                  <Text style={styles.stillUnwellButtonText}>아직 안 나았어요</Text>
                 </Pressable>
               </View>
             </View>

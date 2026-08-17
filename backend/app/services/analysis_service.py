@@ -117,6 +117,9 @@ class AnalysisService:
         items: list[AnalysisHistoryItem] = []
         for analysis in repository.list(user_id):
             symptom = symptom_repo.get(user_id, UUID(str(analysis["symptom_id"])))
+            if symptom is not None and symptom.get("category") == "known_cause_situation":
+                # AI 솔루션(이미 원인을 아는 상황) 기록은 대화 내역/후속 알림 대상에서 제외합니다.
+                continue
             recommendation = recommendation_repo.get_latest_by_analysis(
                 user_id, UUID(str(analysis["id"]))
             )

@@ -9,6 +9,7 @@ import { Screen } from '@/src/components/Screen';
 import { backendApi, getErrorMessage } from '@/src/services/api';
 import { colors, radius } from '@/src/theme/tokens';
 import type { WellnessProfileResponse } from '@/src/types/api';
+import { mergeSpecialNotes } from '@/src/utils/profile';
 
 function formatDate(value: string | null) {
   if (!value) return null;
@@ -51,13 +52,12 @@ export default function WellnessProfileScreen() {
   const maxCount = Math.max(...profile.symptom_frequencies.map((item) => item.occurrence_count), 1);
   const periodStart = formatDate(profile.period_start);
   const periodEnd = formatDate(profile.period_end);
+  const specialNotes = mergeSpecialNotes(profile.known_conditions, profile.allergies);
 
   return <Screen scroll><AppHeader title="웰니스 프로필" back /><View style={styles.body}>
     <View style={styles.healthContext}>
       <View style={styles.contextHeading}><Text style={styles.sectionTitle}>등록된 건강 정보</Text><Ionicons name="shield-checkmark-outline" size={20} color="#8A6B00" /></View>
-      <View style={styles.contextRow}><Text style={styles.contextLabel}>지병</Text><Text style={[styles.contextValue, !profile.known_conditions && styles.emptyValue]}>{profile.known_conditions || '등록되지 않음'}</Text></View>
-      <View style={styles.divider} />
-      <View style={styles.contextRow}><Text style={styles.contextLabel}>알레르기</Text><Text style={[styles.contextValue, !profile.allergies && styles.emptyValue]}>{profile.allergies || '등록되지 않음'}</Text></View>
+      <View style={styles.contextRow}><Text style={styles.contextLabel}>특이사항</Text><Text style={[styles.contextValue, !specialNotes && styles.emptyValue]}>{specialNotes || '등록되지 않음'}</Text></View>
     </View>
 
     <View style={styles.sectionHeader}>

@@ -44,7 +44,7 @@ export default function HistoryScreen() {
       {loading && <View style={styles.state}><ActivityIndicator color={colors.text} /></View>}
       {!loading && error && <View style={styles.state}><Text style={styles.error}>{error}</Text><PrimaryButton label="다시 시도" onPress={() => void load()} style={styles.retry} /></View>}
       {!loading && !error && items.length === 0 && <View style={styles.state}><Text style={styles.empty}>아직 진행한 자가진단이 없어요.</Text></View>}
-      {!loading && !error && items.map((item) => <Pressable key={item.id} style={styles.card} onPress={() => router.push({ pathname: '/history/[id]', params: { id: item.id, description: item.symptom_description, ...(item.recommendation_action ? { recommendationAction: item.recommendation_action } : {}) } })}>
+      {!loading && !error && items.map((item) => <Pressable key={item.id} style={styles.card} onPress={() => router.push({ pathname: '/history/[id]', params: { id: item.id, description: item.symptom_description } })}>
         <View style={styles.cardHeader}>
           <Text style={styles.date}>{formatDate(item.created_at)}</Text>
           <Text style={[styles.status, item.status === 'failed' && styles.statusFailed]}>{STATUS_LABEL[item.status]}</Text>

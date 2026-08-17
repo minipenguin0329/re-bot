@@ -135,7 +135,7 @@ export default function CandidatesScreen() {
         }}
       >
       <View style={styles.body}>
-      <Text style={styles.title}>유력 후보</Text>
+      <Text style={styles.title}>예상되는 원인</Text>
       <Text style={styles.copy}>해당되는 항목을 모두 선택해주세요</Text>
       <View style={styles.cards}>{pageCandidates.map((candidate, indexInPage) => {
       const index = page * PAGE_SIZE + indexInPage;

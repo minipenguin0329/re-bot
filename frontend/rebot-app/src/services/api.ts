@@ -52,7 +52,31 @@ export function getErrorMessage(error: unknown) {
   return '요청을 처리하지 못했습니다. 잠시 후 다시 시도해주세요.';
 }
 
+// 같은 화면에서 여러 훅이 동시에 같은 GET을 호출하면(예: 홈 화면 진입 시 목록 조회가 중복 발생),
+// 이 환경의 fetch가 동시 요청의 응답을 공유해 "Body is unusable" 에러를 내는 경우가 있어
+// 진행 중인 동일 GET 요청은 새로 fetch하지 않고 기존 Promise를 재사용합니다.
+const inflightGetRequests = new Map<string, Promise<unknown>>();
+
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const method = (init.method ?? 'GET').toUpperCase();
+  if (method === 'GET') {
+    const existing = inflightGetRequests.get(path);
+    if (existing) return existing as Promise<T>;
+  }
+
+  const promise = performRequest<T>(path, init);
+
+  if (method === 'GET') {
+    inflightGetRequests.set(path, promise);
+    void promise.finally(() => {
+      if (inflightGetRequests.get(path) === promise) inflightGetRequests.delete(path);
+    });
+  }
+
+  return promise;
+}
+
+async function performRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
   const { data, error } = await supabase.auth.getSession();
   if (error) throw error;
   if (!data.session?.access_token) {

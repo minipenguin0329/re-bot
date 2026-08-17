@@ -14,8 +14,7 @@ export default function ProfileSurveyScreen() {
   const { name, updateProfile, persistProfile } = useProfile();
   const [nickname, setNickname] = useState(name);
   const [sleepHours, setSleepHours] = useState<string>(SLEEP_OPTIONS[DEFAULT_SLEEP_INDEX]);
-  const [knownConditions, setKnownConditions] = useState('');
-  const [allergies, setAllergies] = useState('');
+  const [specialNotes, setSpecialNotes] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleStart = async () => {
@@ -27,8 +26,7 @@ export default function ProfileSurveyScreen() {
     const finalValues = {
       name: trimmedNickname || name,
       sleepHours,
-      knownConditions: knownConditions.trim(),
-      allergies: allergies.trim(),
+      specialNotes: specialNotes.trim(),
     };
     updateProfile(finalValues);
     setLoading(true);
@@ -58,24 +56,13 @@ export default function ProfileSurveyScreen() {
           <WheelPicker items={SLEEP_OPTIONS} initialIndex={DEFAULT_SLEEP_INDEX} pillWidth={200} onChange={(_, value) => setSleepHours(value as string)} />
         </View>
         <View style={styles.healthBlock}>
-          <Text style={styles.label}>지병 <Text style={styles.helper}>(알고 계신 질환이 있다면 입력해 주세요)</Text></Text>
+          <Text style={styles.label}>특이사항 <Text style={styles.helper}>(지병, 알레르기 등 알고 계신 사항이 있다면 입력해 주세요)</Text></Text>
           <TextInput
             style={styles.textArea}
-            placeholder="예) 고혈압, 당뇨, 천식 등"
+            placeholder="예) 고혈압, 당뇨, 땅콩 알레르기 등"
             placeholderTextColor="#B9B9BE"
-            value={knownConditions}
-            onChangeText={setKnownConditions}
-            multiline
-            textAlignVertical="top"
-            maxLength={2000}
-          />
-          <Text style={[styles.label, styles.allergyLabel]}>알레르기 <Text style={styles.helper}>(음식·환경·약물 등)</Text></Text>
-          <TextInput
-            style={styles.textArea}
-            placeholder="예) 땅콩, 우유, 꽃가루 등"
-            placeholderTextColor="#B9B9BE"
-            value={allergies}
-            onChangeText={setAllergies}
+            value={specialNotes}
+            onChangeText={setSpecialNotes}
             multiline
             textAlignVertical="top"
             maxLength={2000}

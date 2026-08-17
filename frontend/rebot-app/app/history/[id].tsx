@@ -24,10 +24,9 @@ import { colors, radius } from '@/src/theme/tokens';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function HistoryDetailScreen() {
-  const { id, description, recommendationAction, focusChat } = useLocalSearchParams<{
+  const { id, description, focusChat } = useLocalSearchParams<{
     id: string;
     description?: string;
-    recommendationAction?: string;
     focusChat?: string;
   }>();
   const insets = useSafeAreaInsets();
@@ -166,6 +165,11 @@ export default function HistoryDetailScreen() {
     ? Math.max(8, Math.min(14, Math.round(viewportHeight * 0.015)))
     : Math.max(insets.bottom, 10);
   const keyboardOpen = keyboardHeight > 0;
+  // 아직 원인을 선택하지 않은 기록은 AI가 제시한 후보를 그대로 보여주고,
+  // 선택을 마친 기록은 선택하지 않은 후보를 숨겨 선택된 원인만 보여줍니다.
+  const visibleCandidates = analysis.selection_status === 'unselected'
+    ? analysis.candidates
+    : analysis.candidates.filter((candidate) => candidate.selected);
 
   return <Screen bottomSafe={false}>
     <KeyboardAvoidingView
@@ -191,8 +195,8 @@ export default function HistoryDetailScreen() {
       >
         {description ? <View style={styles.symptomBlock}><Text style={styles.label}>증상</Text><Text style={styles.symptomText}>{description}</Text></View> : null}
 
-        <Text style={styles.label}>유력 후보</Text>
-        <View style={styles.cards}>{analysis.candidates.map((candidate) => <View key={candidate.id} style={[styles.candidateCard, candidate.selected && styles.candidateCardSelected]}>
+        <Text style={styles.label}>예상되는 원인</Text>
+        <View style={styles.cards}>{visibleCandidates.map((candidate) => <View key={candidate.id} style={[styles.candidateCard, candidate.selected && styles.candidateCardSelected]}>
           <View style={styles.candidateHeader}>
             <Text style={styles.candidateTitle}>{candidate.title}</Text>
             {candidate.selected && <Ionicons name="checkmark-circle" size={18} color="#8A6B00" />}
@@ -201,10 +205,8 @@ export default function HistoryDetailScreen() {
             {candidate.reason}
           </Text>
         </View>)}</View>
-        {analysis.candidates.length === 0 && <Text style={styles.empty}>확인된 후보가 없어요.</Text>}
+        {visibleCandidates.length === 0 && analysis.selection_status !== 'none' && <Text style={styles.empty}>{analysis.selection_status === 'unselected' ? '확인된 후보가 없어요.' : '선택한 원인이 없어요.'}</Text>}
         {analysis.selection_status === 'none' && <Text style={styles.empty}>제시된 후보 중 해당하는 항목이 없다고 선택했어요.</Text>}
-
-        {recommendationAction && <View style={styles.recommendationBlock}><Text style={styles.label}>추천 해결 방법</Text><Text style={styles.recommendationText}>{recommendationAction}</Text></View>}
 
         <View style={styles.chatSection}>
           <Text style={styles.chatTitle}>AI와 이어서 대화하기</Text>
@@ -265,8 +267,6 @@ const styles = StyleSheet.create({
   candidateTitle: { fontSize: 15, fontWeight: '700', color: colors.text, flex: 1 },
   candidateReason: { marginTop: 6, fontSize: 13, lineHeight: 20, color: colors.muted },
   empty: { fontSize: 13, color: colors.muted },
-  recommendationBlock: { borderRadius: radius.md, backgroundColor: colors.warningSoft, padding: 18 },
-  recommendationText: { fontSize: 14, lineHeight: 22, color: colors.text },
   chatSection: { marginTop: 24, paddingTop: 22, borderTopWidth: 1, borderTopColor: colors.border },
   chatTitle: { fontSize: 17, fontWeight: '800', color: colors.text },
   chatGuide: { marginTop: 6, marginBottom: 18, fontSize: 12, lineHeight: 19, color: colors.muted },

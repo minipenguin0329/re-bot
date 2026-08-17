@@ -5,7 +5,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { runOnJS, useAnimatedProps, useAnimatedStyle, useSharedValue, withSpring, ZoomIn, ZoomOut } from 'react-native-reanimated';
 import Svg, { Line } from 'react-native-svg';
-import { DUMMY_MIND_MAP_CAUSES, MindMapCause, MindMapSymptom } from '@/src/data/mindmap';
+import { DUMMY_MIND_MAP_CAUSES, MindMapCause } from '@/src/data/mindmap';
 import { colors, radius } from '@/src/theme/tokens';
 
 const AnimatedLine = Animated.createAnimatedComponent(Line);
@@ -18,11 +18,7 @@ const CENTER_SIZE = 72;
 const MAX_ROTATE = 0.3;
 const MIN_ANGLE_GAP = 2 * Math.asin(Math.min(1, NODE_SIZE / (2 * NODE_RADIUS)));
 
-function causeSeverityColors(symptomCount: number): { background: string; border: string } {
-  if (symptomCount <= 1) return { background: '#FFF3B0', border: '#F0C808' };
-  if (symptomCount <= 3) return { background: '#FFDCAE', border: '#F2994A' };
-  return { background: '#FFC9C2', border: '#EB5757' };
-}
+const BRANCH_COLOR = { background: '#FFF3B0', border: '#F0C808' };
 
 type BranchNode = { id: string; label: string };
 
@@ -176,10 +172,10 @@ export function MindMap({ photoUri = null, causes = DUMMY_MIND_MAP_CAUSES }: Pro
       <CircularBranches
         nodes={selectedCause ? selectedCause.symptoms : causes}
         onNodePress={selectedCause ? undefined : handleCausePress}
-        nodeColor={selectedCause ? colors.surface : (item: MindMapCause | MindMapSymptom) => causeSeverityColors('symptoms' in item ? item.symptoms.length : 0).background}
-        nodeBorderColor={selectedCause ? colors.border : (item: MindMapCause | MindMapSymptom) => causeSeverityColors('symptoms' in item ? item.symptoms.length : 0).border}
-        centerColor={selectedCause ? colors.accent : colors.surfaceStrong}
-        centerBorderColor={selectedCause ? colors.accent : colors.white}
+        nodeColor={BRANCH_COLOR.background}
+        nodeBorderColor={BRANCH_COLOR.border}
+        centerColor={BRANCH_COLOR.background}
+        centerBorderColor={BRANCH_COLOR.border}
         centerContent={
           <Pressable style={styles.centerPressable} onPress={goBackToCauses} disabled={!selectedCause}>
             <Animated.View

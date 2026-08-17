@@ -2,7 +2,7 @@ import { useCallback, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
 import type { MindMapCause } from '@/src/data/mindmap';
 import { backendApi } from '@/src/services/api';
-import { toBranchWord } from '@/src/utils/text';
+import { toBranchWord, toBranchWordForCandidate } from '@/src/utils/text';
 
 const HISTORY_LIMIT = 8;
 const MAX_CAUSES = 6;
@@ -29,7 +29,9 @@ export function useMindMapCauses() {
           const cause = byCauseWord.get(causeWord) ?? { id: causeWord, label: causeWord, symptoms: [] };
           byCauseWord.set(causeWord, cause);
 
-          const symptomWord = toBranchWord(symptomDescription);
+          // 한 번의 증상 입력에 문제가 여러 개 섞여 있어도, 이 후보가 실제로 설명하는 내용에 맞는
+          // 단어를 우선 선택합니다 (예: "두통이 있고 체중도 늘었어요" → 후보별로 두통/체중을 각각 선택).
+          const symptomWord = toBranchWordForCandidate(symptomDescription, candidate.reason, causeWord);
           if (!symptomWord) return;
           let symptom = cause.symptoms.find((existing) => existing.label === symptomWord);
           if (!symptom) {

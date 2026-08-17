@@ -6,9 +6,11 @@ import { Screen } from '@/src/components/Screen';
 import { colors } from '@/src/theme/tokens';
 
 const menus = [
+  { label: '자주 묻는 질문', icon: 'help-circle-outline' as const, action: 'route' as const, pathname: '/profile/support/faq' as const, params: undefined },
   { label: '이메일로 문의', icon: 'mail-outline' as const, action: 'route' as const, pathname: '/profile/support/email' as const, params: undefined },
   { label: '이용약관', icon: 'document-text-outline' as const, action: 'route' as const, pathname: '/profile/support/terms' as const, params: { tab: 'terms' } },
   { label: '주의사항', icon: 'alert-circle-outline' as const, action: 'route' as const, pathname: '/profile/support/terms' as const, params: { tab: 'notice' } },
+  { label: '개인정보처리방침', icon: 'shield-checkmark-outline' as const, action: 'route' as const, pathname: '/profile/support/terms' as const, params: { tab: 'privacy' } },
 ];
 
 export default function SupportScreen() {

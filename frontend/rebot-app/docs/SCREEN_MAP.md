@@ -22,7 +22,8 @@
 | 마이페이지 | `/profile/edit` | 회원정보 수정 (아이디·한줄소개·프로필 사진) |
 | 마이페이지 | `/profile/notifications` | 알림 설정 on/off |
 | 마이페이지 | `/profile/support` | 고객센터 메뉴 |
+| 마이페이지 | `/profile/support/faq` | 자주 묻는 질문 |
 | 마이페이지 | `/profile/support/email` | 익명 이메일 문의 |
-| 마이페이지 | `/profile/support/terms` | 이용약관·주의사항 |
+| 마이페이지 | `/profile/support/terms` | 이용약관·주의사항·개인정보처리방침 |
 
 Figma 기준 프레임은 402×874입니다. 앱에서는 고정 좌표 대신 안전영역과 Flexbox를 사용해 화면 크기에 대응합니다.
