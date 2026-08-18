@@ -150,7 +150,7 @@ def test_recommended_products_only_return_database_rows(
             "category": "hydration",
             "description": "수분 섭취 기록용",
             "image_url": None,
-            "purchase_url": None,
+            "purchase_url": "https://example.com/products/water-bottle",
             "tags": ["hydration"],
             "active": True,
             "created_at": datetime.now(timezone.utc).isoformat(),
@@ -163,4 +163,6 @@ def test_recommended_products_only_return_database_rows(
 
     assert response.status_code == 200, response.text
     assert [item["id"] for item in response.json()] == [product_id]
-
+    assert response.json()[0]["purchase_url"] == (
+        "https://example.com/products/water-bottle"
+    )

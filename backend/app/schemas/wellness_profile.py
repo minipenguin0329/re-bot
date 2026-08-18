@@ -11,6 +11,7 @@ class SymptomFrequency(BaseModel):
 
 
 class WellnessProfileResponse(BaseModel):
+    special_notes: str | None = None
     known_conditions: str | None = None
     allergies: str | None = None
     symptom_frequencies: list[SymptomFrequency]

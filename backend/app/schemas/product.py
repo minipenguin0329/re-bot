@@ -1,7 +1,7 @@
 from datetime import datetime
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import AnyHttpUrl, BaseModel, ConfigDict
 
 
 class ProductResponse(BaseModel):
@@ -10,7 +10,7 @@ class ProductResponse(BaseModel):
     category: str
     description: str | None = None
     image_url: str | None = None
-    purchase_url: str | None = None
+    purchase_url: AnyHttpUrl | None = None
     tags: list[str]
     price_krw: int | None = None
     active: bool

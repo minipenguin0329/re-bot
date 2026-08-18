@@ -37,6 +37,10 @@ def _build_analysis_context(
         "job": profile.get("job") if profile else None,
         "gender": profile.get("gender") if profile else None,
         "usual_sleep_hours": profile.get("average_sleep_hours") if profile else None,
+        "special_notes": profile.get("special_notes") if profile else None,
+        "special_notes_classification": (
+            profile.get("special_notes_classification", []) if profile else []
+        ),
     }
     log_fields = (
         "date",

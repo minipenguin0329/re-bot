@@ -67,7 +67,7 @@ export default function ProfileSurveyScreen() {
             textAlignVertical="top"
             maxLength={2000}
           />
-          <Text style={styles.optional}>모든 항목은 선택 사항입니다. 나중에 내 정보에서 수정할 수 있습니다.</Text>
+          <Text style={styles.optional}>질병과 알레르기를 나눠 적지 않아도 AI가 입력한 내용만 자동으로 분류해요. 모든 항목은 선택 사항이며 나중에 내 정보에서 수정할 수 있습니다.</Text>
         </View>
       </ScrollView>
       <View style={styles.footer}><PrimaryButton label="시작하기" onPress={handleStart} loading={loading} /></View>

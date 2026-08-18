@@ -52,7 +52,7 @@ export default function WellnessProfileScreen() {
   const maxCount = Math.max(...profile.symptom_frequencies.map((item) => item.occurrence_count), 1);
   const periodStart = formatDate(profile.period_start);
   const periodEnd = formatDate(profile.period_end);
-  const specialNotes = mergeSpecialNotes(profile.known_conditions, profile.allergies);
+  const specialNotes = profile.special_notes ?? mergeSpecialNotes(profile.known_conditions, profile.allergies);
 
   return <Screen scroll><AppHeader title="웰니스 프로필" back /><View style={styles.body}>
     <View style={styles.healthContext}>

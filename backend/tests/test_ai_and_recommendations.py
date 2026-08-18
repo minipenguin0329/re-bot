@@ -11,11 +11,13 @@ from pydantic import ValidationError
 from app.core.config import Settings
 from app.core.exceptions import AppError
 from app.schemas.analysis import CauseAnalysisResult, CauseCandidate
+from app.schemas.profile import SpecialNoteItem, SpecialNotesClassification
 from app.schemas.recommendation import (
     RecommendationOption,
     RecommendationResult,
     SupportResource,
 )
+from app.services.recommendation_service import _feedback_preferences
 from app.services.openai_service import OpenAIService
 from tests.conftest import USER_A, USER_B, FakeDatabase
 
@@ -124,6 +126,65 @@ async def test_openai_api_failure_is_mapped_to_safe_error() -> None:
 
     assert exc_info.value.code == "AI_ANALYSIS_FAILED"
     assert "api.openai.com" not in exc_info.value.message
+
+
+@pytest.mark.asyncio
+async def test_special_notes_use_structured_classification() -> None:
+    classification = SpecialNotesClassification(
+        items=[SpecialNoteItem(category="allergy", detail="견과류 알레르기")]
+    )
+    service = OpenAIService(
+        Settings(openai_api_key="test", openai_model="test-model"),
+        client=StubOpenAIClient(StubResponses(output=classification)),  # type: ignore[arg-type]
+    )
+
+    result = await service.classify_special_notes("견과류 알레르기가 있어요.")
+
+    assert result.items[0].category == "allergy"
+
+
+def test_feedback_is_summarized_as_personalization_preferences() -> None:
+    summary = _feedback_preferences(
+        [
+            {
+                "feedback": "positive",
+                "reason": None,
+                "recommendations": {"action": "잠들기 전 5분 스트레칭"},
+            },
+            {
+                "feedback": "negative",
+                "reason": "저녁에는 시간이 없어요.",
+                "recommendations": {"action": "퇴근 후 30분 산책"},
+            },
+        ]
+    )
+
+    assert summary["liked_actions"] == ["잠들기 전 5분 스트레칭"]
+    assert summary["disliked_actions"] == ["퇴근 후 30분 산책"]
+    assert summary["constraints_from_negative_feedback"] == [
+        "저녁에는 시간이 없어요."
+    ]
+
+
+def test_profile_special_notes_are_classified_and_saved(
+    authenticated_client: TestClient, fake_db: FakeDatabase
+) -> None:
+    response = authenticated_client.post(
+        "/api/profile",
+        json={
+            "nickname": "리봇",
+            "special_notes": "천식이 있고 견과류 알레르기가 있어요.",
+        },
+    )
+
+    assert response.status_code == 201, response.text
+    body = response.json()
+    assert body["special_notes"] == "천식이 있고 견과류 알레르기가 있어요."
+    assert {item["category"] for item in body["special_notes_classification"]} == {
+        "health_condition",
+        "allergy",
+    }
+    assert fake_db.tables["profiles"][0]["special_notes_classification"]
 
 
 def test_analysis_saves_structured_candidates(

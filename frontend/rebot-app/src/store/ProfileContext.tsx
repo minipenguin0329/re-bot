@@ -2,7 +2,7 @@ import { createContext, PropsWithChildren, useCallback, useContext, useEffect, u
 
 import { backendApi } from '@/src/services/api';
 import { useAuth } from '@/src/store/AuthContext';
-import type { MeResponse, ProfileResponse } from '@/src/types/api';
+import type { MeResponse, ProfileResponse, SpecialNoteItem } from '@/src/types/api';
 import { hoursToSleepOption, mergeSpecialNotes, sleepOptionToHours } from '@/src/utils/profile';
 
 type Notifications = { all: boolean; followUp: boolean };
@@ -16,9 +16,10 @@ type Profile = {
   birthYear: number | null;
   sleepHours: string;
   specialNotes: string;
+  specialNoteClassifications: SpecialNoteItem[];
   notifications: Notifications;
 };
-type EditableProfile = Omit<Profile, 'notifications'>;
+type EditableProfile = Omit<Profile, 'notifications' | 'specialNoteClassifications'>;
 type ProfileContextValue = Profile & {
   loading: boolean;
   remoteProfileExists: boolean;
@@ -38,6 +39,7 @@ const defaultProfile: Profile = {
   birthYear: null,
   sleepHours: '',
   specialNotes: '',
+  specialNoteClassifications: [],
   notifications: { all: true, followUp: true },
 };
 
@@ -59,7 +61,8 @@ export function ProfileProvider({ children }: PropsWithChildren) {
       birthYear: me.profile?.birth_year ?? null,
       gender: me.profile?.gender === '남성' || me.profile?.gender === '여성' ? me.profile.gender : null,
       sleepHours: hoursToSleepOption(me.profile?.average_sleep_hours),
-      specialNotes: mergeSpecialNotes(me.profile?.known_conditions, me.profile?.allergies),
+      specialNotes: me.profile?.special_notes ?? mergeSpecialNotes(me.profile?.known_conditions, me.profile?.allergies),
+      specialNoteClassifications: me.profile?.special_notes_classification ?? [],
     }));
   }, [user]);
 
@@ -104,8 +107,7 @@ export function ProfileProvider({ children }: PropsWithChildren) {
       birth_year: values.birthYear,
       gender: values.gender,
       average_sleep_hours: sleepOptionToHours(values.sleepHours),
-      known_conditions: values.specialNotes.trim() || null,
-      allergies: null,
+      special_notes: values.specialNotes.trim() || null,
     };
     const saved = remoteProfileExists
       ? await backendApi.updateProfile(payload)

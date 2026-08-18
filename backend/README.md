@@ -95,7 +95,7 @@ Supabase Auth로 검증하고 사용자 ID를 결정합니다.
 | --- | --- | --- |
 | GET | `/health` | 서버 상태 |
 | GET | `/api/me` | 현재 인증 사용자와 프로필 |
-| POST/PATCH | `/api/profile` | 프로필 생성/수정 |
+| POST/PATCH | `/api/profile` | 프로필 생성/수정 및 특이사항 AI 자동 분류 |
 | GET | `/api/profile/wellness` | 반복 증상 빈도와 등록 건강 정보 조회 |
 | POST/GET | `/api/logs` | 생활 기록 생성/목록, `?days=7` 지원 |
 | GET/PATCH/DELETE | `/api/logs/{id}` | 본인 생활 기록 조회/수정/삭제 |
@@ -111,12 +111,21 @@ Supabase Auth로 검증하고 사용자 ID를 결정합니다.
 | POST | `/api/recommendations` | 선택 결과에 맞춘 작은 행동 생성 |
 | POST | `/api/recommendations/{id}/feedback` | positive/negative 피드백 저장 |
 | POST | `/api/recommendations/{id}/alternative` | 부정 피드백 기반 더 작은 대안 생성 |
+| GET | `/api/reports/weekly` | 주간 AI 건강 리포트 생성/조회 |
+| GET | `/api/reports/monthly` | 월간 AI 건강 리포트 생성/조회 |
 | GET | `/api/products` | 동의 후 활성 제품 목록 |
 | GET | `/api/products/search?q=` | 동의 후 제품명 검색 |
 | GET | `/api/products/recommended?tags=` | 동의 후 DB 태그 제품 조회 |
 
 제품 API는 `consent=true`가 반드시 필요합니다. 추천 태그는 `sleep`, `exercise`,
-`hydration`, `desk_environment`만 허용합니다. OpenAI는 제품명을 만들지 않습니다.
+`hydration`, `desk_environment`만 허용합니다. OpenAI는 제품명이나 URL을 만들지 않고,
+앱은 데이터베이스에 등록된 `purchase_url`만 엽니다.
+
+프로필의 `special_notes`는 질환·알레르기·복용 항목 등을 구분하지 않고 한 문장으로
+입력하는 필드입니다. 서버는 입력에 명시된 사실만 Structured Output으로 분류해
+`special_notes_classification`에 저장하며, 이 결과를 진단으로 취급하지 않습니다.
+행동 추천에는 최근 좋아요/싫어요 행동과 부정 피드백 사유가 함께 전달되어 다음
+제안의 개인화 문맥으로 사용됩니다. 이는 모델 파인튜닝이 아니라 사용자별 문맥 반영입니다.
 
 ## 9. 핵심 요청 예시
 

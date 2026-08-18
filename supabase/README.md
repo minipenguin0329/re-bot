@@ -8,6 +8,8 @@
 - `migrations/20260809010000_storage_rls.sql`: 사용자별 이미지 폴더 Storage 정책
 - `migrations/20260809020000_performance_advisor_fixes.sql`: 외래키 인덱스와 RLS 성능 최적화
 - `migrations/20260810000000_product_catalog.sql`: 상품 가격 필드와 초기 웰니스 상품 카탈로그
+- `migrations/20260818000000_special_notes_classification.sql`: 단일 특이사항과 AI 분류 결과 필드
+- `migrations/20260818010000_product_purchase_urls.sql`: 초기 상품의 외부 제품 검색 URL
 - `backend/sql/schema.sql`: SQL Editor에서 수동 실행할 때 사용하는 동일 스키마
 - `frontend/rebot-app/src/types/database.types.ts`: 마이그레이션 스키마에 대응하는 TypeScript 타입
 

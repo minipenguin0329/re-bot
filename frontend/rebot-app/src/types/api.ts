@@ -4,12 +4,20 @@ export type ProfilePayload = {
   birth_year?: number | null;
   gender?: string | null;
   average_sleep_hours?: number | null;
+  special_notes?: string | null;
+  // Read-only compatibility for profiles saved before special_notes was introduced.
   known_conditions?: string | null;
   allergies?: string | null;
 };
 
+export type SpecialNoteItem = {
+  category: 'health_condition' | 'allergy' | 'medication' | 'dietary_restriction' | 'other';
+  detail: string;
+};
+
 export type ProfileResponse = ProfilePayload & {
   id: string;
+  special_notes_classification: SpecialNoteItem[];
   created_at: string;
   updated_at: string;
 };
@@ -144,6 +152,28 @@ export type FeedbackResponse = {
   created_at: string;
 };
 
+export type ReportResponse = {
+  id: string;
+  user_id: string;
+  period_type: 'weekly' | 'monthly';
+  period_start: string;
+  period_end: string;
+  statistics: {
+    recorded_days: number;
+    average_sleep_hours: number | null;
+    average_stress_level: number | null;
+    exercise_days: number;
+    symptom_count: number;
+    late_meal_count: number;
+  };
+  summary: {
+    overview: string;
+    observations: string[];
+    disclaimer: string;
+  };
+  created_at: string;
+};
+
 export type SymptomFrequency = {
   symptom_name: string;
   occurrence_count: number;
@@ -152,6 +182,7 @@ export type SymptomFrequency = {
 };
 
 export type WellnessProfileResponse = {
+  special_notes: string | null;
   known_conditions: string | null;
   allergies: string | null;
   symptom_frequencies: SymptomFrequency[];

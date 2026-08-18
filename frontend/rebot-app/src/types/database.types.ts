@@ -205,6 +205,8 @@ export type Database = {
           id: string
           job: string | null
           nickname: string
+          special_notes: string | null
+          special_notes_classification: Json
           updated_at: string
         }
         Insert: {
@@ -215,6 +217,8 @@ export type Database = {
           id: string
           job?: string | null
           nickname: string
+          special_notes?: string | null
+          special_notes_classification?: Json
           updated_at?: string
         }
         Update: {
@@ -225,6 +229,8 @@ export type Database = {
           id?: string
           job?: string | null
           nickname?: string
+          special_notes?: string | null
+          special_notes_classification?: Json
           updated_at?: string
         }
         Relationships: []

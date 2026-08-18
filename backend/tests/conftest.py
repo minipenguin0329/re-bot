@@ -14,7 +14,9 @@ from app.core.security import CurrentUser, get_current_user
 from app.main import app
 from app.schemas.analysis import CauseAnalysisResult, CauseCandidate
 from app.schemas.chat import ChatAnswer
+from app.schemas.profile import SpecialNoteItem, SpecialNotesClassification
 from app.schemas.recommendation import RecommendationResult
+from app.schemas.report import ReportSummary
 from app.services.openai_service import get_openai_service
 
 USER_A = UUID("11111111-1111-1111-1111-111111111111")
@@ -222,10 +224,27 @@ class FakeOpenAIService:
             alternative="깊게 세 번 호흡해 보세요.",
         )
 
+    async def create_report(self, _: dict[str, object]) -> ReportSummary:
+        return ReportSummary(
+            overview="서버에서 계산한 이번 기간의 생활 기록 요약입니다.",
+            observations=["기록된 날의 수면과 스트레스 추이를 함께 확인해보세요."],
+            disclaimer="이 요약만으로 인과관계나 질병을 판단할 수 없습니다.",
+        )
+
     async def create_chat_reply(self, _: dict[str, object]) -> ChatAnswer:
         return ChatAnswer(
             answer="기록을 바탕으로 수면 시간과 불편감의 변화를 함께 살펴보세요."
         )
+
+    async def classify_special_notes(
+        self, special_notes: str
+    ) -> SpecialNotesClassification:
+        items = []
+        if "견과류" in special_notes:
+            items.append(SpecialNoteItem(category="allergy", detail="견과류 알레르기"))
+        if "천식" in special_notes:
+            items.append(SpecialNoteItem(category="health_condition", detail="천식"))
+        return SpecialNotesClassification(items=items)
 
 
 class FakeBucket:

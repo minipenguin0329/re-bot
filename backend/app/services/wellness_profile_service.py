@@ -83,6 +83,7 @@ class WellnessProfileService:
             if item.get("created_at")
         ]
         return WellnessProfileResponse(
+            special_notes=profile.get("special_notes") if profile else None,
             known_conditions=profile.get("known_conditions") if profile else None,
             allergies=profile.get("allergies") if profile else None,
             symptom_frequencies=frequencies,

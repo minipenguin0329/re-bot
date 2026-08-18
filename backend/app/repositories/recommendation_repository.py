@@ -76,7 +76,10 @@ class RecommendationRepository:
     ) -> list[dict[str, Any]]:
         return execute_query(
             self.client.table("recommendation_feedback")
-            .select("feedback,reason,created_at,recommendations(action)")
+            .select(
+                "feedback,reason,created_at,"
+                "recommendations(action,reason,duration_minutes,difficulty)"
+            )
             .eq("user_id", str(user_id))
             .order("created_at", desc=True)
             .limit(limit)

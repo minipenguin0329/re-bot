@@ -13,6 +13,7 @@ import type {
   ProfilePayload,
   ProfileResponse,
   RecommendationResponse,
+  ReportResponse,
   SymptomResponse,
   WellnessProfileResponse,
 } from '@/src/types/api';
@@ -196,6 +197,7 @@ export const backendApi = {
     request<RecommendationResponse>(`/api/recommendations/${recommendationId}/alternative`, {
       method: 'POST',
     }),
+  getWeeklyReport: () => request<ReportResponse>('/api/reports/weekly'),
   getWellnessProfile: () => request<WellnessProfileResponse>('/api/profile/wellness'),
   listProducts: () => request<ProductResponse[]>('/api/products?consent=true'),
   searchProducts: (query: string) =>
