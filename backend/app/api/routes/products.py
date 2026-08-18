@@ -1,10 +1,15 @@
+import logging
+from typing import Any
+
 from fastapi import APIRouter, Query
+from pydantic import ValidationError
 
 from app.api.dependencies import AuthenticatedUser, DatabaseClient
 from app.core.exceptions import AppError
 from app.repositories.product_repository import ProductRepository
 from app.schemas.product import ProductResponse
 
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/products", tags=["products"])
 ALLOWED_PRODUCT_TAGS = {"sleep", "exercise", "hydration", "desk_environment"}
 
@@ -18,6 +23,18 @@ def _require_consent(consent: bool) -> None:
         )
 
 
+def _validate_products(rows: list[dict[str, Any]]) -> list[ProductResponse]:
+    # 상품 하나의 데이터(예: 잘못된 purchase_url)가 잘못됐다고 목록 전체 조회가 죽으면 안 되므로,
+    # 문제가 있는 행은 건너뛰고 나머지는 정상적으로 반환합니다.
+    products: list[ProductResponse] = []
+    for row in rows:
+        try:
+            products.append(ProductResponse.model_validate(row))
+        except ValidationError:
+            logger.warning("Skipping invalid product row id=%s", row.get("id"))
+    return products
+
+
 @router.get("", response_model=list[ProductResponse])
 async def list_products(
     user: AuthenticatedUser,
@@ -25,10 +42,7 @@ async def list_products(
     consent: bool = Query(default=False),
 ) -> list[ProductResponse]:
     _require_consent(consent)
-    return [
-        ProductResponse.model_validate(row)
-        for row in ProductRepository(client).list_active()
-    ]
+    return _validate_products(ProductRepository(client).list_active())
 
 
 @router.get("/search", response_model=list[ProductResponse])
@@ -39,10 +53,7 @@ async def search_products(
     consent: bool = Query(default=False),
 ) -> list[ProductResponse]:
     _require_consent(consent)
-    return [
-        ProductResponse.model_validate(row)
-        for row in ProductRepository(client).search(q)
-    ]
+    return _validate_products(ProductRepository(client).search(q))
 
 
 @router.get("/recommended", response_model=list[ProductResponse])
@@ -60,5 +71,5 @@ async def recommended_products(
     if not requested_tags or not requested_tags.issubset(ALLOWED_PRODUCT_TAGS):
         raise AppError("VALIDATION_ERROR", "지원하지 않는 제품 태그가 포함되어 있습니다.", 422)
     rows = ProductRepository(client).recommended(sorted(requested_tags))
-    return [ProductResponse.model_validate(row) for row in rows]
+    return _validate_products(rows)
 

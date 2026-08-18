@@ -5,7 +5,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { runOnJS, useAnimatedProps, useAnimatedStyle, useSharedValue, withSpring, ZoomIn, ZoomOut } from 'react-native-reanimated';
 import Svg, { Line } from 'react-native-svg';
-import { DUMMY_MIND_MAP_CAUSES, MindMapCause } from '@/src/data/mindmap';
+import { DUMMY_MIND_MAP_CAUSES, MindMapCause, MindMapSymptom } from '@/src/data/mindmap';
 import { colors, radius } from '@/src/theme/tokens';
 
 const AnimatedLine = Animated.createAnimatedComponent(Line);
@@ -18,7 +18,11 @@ const CENTER_SIZE = 72;
 const MAX_ROTATE = 0.3;
 const MIN_ANGLE_GAP = 2 * Math.asin(Math.min(1, NODE_SIZE / (2 * NODE_RADIUS)));
 
-const BRANCH_COLOR = { background: '#FFF3B0', border: '#F0C808' };
+function causeSeverityColors(symptomCount: number): { background: string; border: string } {
+  if (symptomCount <= 1) return { background: '#FFF3B0', border: '#F0C808' };
+  if (symptomCount <= 3) return { background: '#FFDCAE', border: '#F2994A' };
+  return { background: '#FFC9C2', border: '#EB5757' };
+}
 
 type BranchNode = { id: string; label: string };
 
@@ -75,7 +79,7 @@ function Branch<T extends BranchNode>({ node, baseAngle, maxRotate, index, color
   return (
     <>
       <Svg style={StyleSheet.absoluteFill} width={SIZE} height={SIZE} pointerEvents="none">
-        <AnimatedLine x1={CENTER} y1={CENTER} animatedProps={lineAnimatedProps} stroke={colors.border} strokeWidth={2} />
+        <AnimatedLine x1={CENTER} y1={CENTER} animatedProps={lineAnimatedProps} stroke="#E3D6A8" strokeWidth={2} strokeLinecap="round" />
       </Svg>
       <GestureDetector gesture={gesture}>
         <Animated.View
@@ -167,15 +171,17 @@ export function MindMap({ photoUri = null, causes = DUMMY_MIND_MAP_CAUSES }: Pro
     setSelectedCause(causes.find((current) => current.id === node.id) ?? null);
   };
 
+  const selectedCauseColors = selectedCause ? causeSeverityColors(selectedCause.symptoms.length) : null;
+
   return (
     <View style={styles.wrap}>
       <CircularBranches
         nodes={selectedCause ? selectedCause.symptoms : causes}
         onNodePress={selectedCause ? undefined : handleCausePress}
-        nodeColor={BRANCH_COLOR.background}
-        nodeBorderColor={BRANCH_COLOR.border}
-        centerColor={BRANCH_COLOR.background}
-        centerBorderColor={BRANCH_COLOR.border}
+        nodeColor={selectedCause ? colors.surface : (item: MindMapCause | MindMapSymptom) => causeSeverityColors('symptoms' in item ? item.symptoms.length : 0).background}
+        nodeBorderColor={selectedCause ? colors.border : (item: MindMapCause | MindMapSymptom) => causeSeverityColors('symptoms' in item ? item.symptoms.length : 0).border}
+        centerColor={selectedCauseColors ? selectedCauseColors.background : colors.surfaceStrong}
+        centerBorderColor={selectedCauseColors ? selectedCauseColors.border : colors.white}
         centerContent={
           <Pressable style={styles.centerPressable} onPress={goBackToCauses} disabled={!selectedCause}>
             <Animated.View
@@ -200,8 +206,11 @@ export function MindMap({ photoUri = null, causes = DUMMY_MIND_MAP_CAUSES }: Pro
           {selectedCause.symptoms.flatMap((symptom) =>
             symptom.details.map((detail, index) => (
               <View key={`${symptom.id}-${index}`} style={styles.detailItem}>
-                <Text style={styles.detailTitle}>{detail.title}</Text>
-                <Text style={styles.detailReason}>{detail.reason}</Text>
+                <View style={styles.detailAccent} />
+                <View style={styles.detailBody}>
+                  <Text style={styles.detailTitle}>{detail.title}</Text>
+                  <Text style={styles.detailReason}>{detail.reason}</Text>
+                </View>
               </View>
             )),
           )}
@@ -209,7 +218,7 @@ export function MindMap({ photoUri = null, causes = DUMMY_MIND_MAP_CAUSES }: Pro
       )}
       {selectedCause && (
         <Pressable hitSlop={8} style={styles.backHint} onPress={goBackToCauses}>
-          <Ionicons name="arrow-back" size={13} color={colors.muted} />
+          <Ionicons name="arrow-back" size={13} color={colors.text} />
           <Text style={styles.backHintText}>원인 목록으로</Text>
         </Pressable>
       )}
@@ -224,8 +233,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
-    borderWidth: 2,
+    borderWidth: 3,
     zIndex: 2,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
   },
   centerPressable: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' },
   avatarImage: { width: CENTER_SIZE, height: CENTER_SIZE },
@@ -240,10 +254,15 @@ const styles = StyleSheet.create({
     width: NODE_SIZE,
     height: NODE_SIZE,
     borderRadius: NODE_SIZE / 2,
-    borderWidth: 1,
+    borderWidth: 1.5,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 6,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 5,
+    elevation: 3,
   },
   nodeText: { fontSize: 12, fontWeight: '700', color: colors.text, textAlign: 'center' },
   detailSection: {
@@ -253,13 +272,36 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   detailItem: {
+    flexDirection: 'row',
     borderRadius: radius.md,
     backgroundColor: colors.surface,
+    overflow: 'hidden',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 1,
+  },
+  detailAccent: {
+    width: 4,
+    backgroundColor: colors.accent,
+  },
+  detailBody: {
+    flex: 1,
     padding: 16,
     gap: 4,
   },
   detailTitle: { fontSize: 15, fontWeight: '800', color: colors.text },
   detailReason: { fontSize: 13, lineHeight: 20, color: colors.muted },
-  backHint: { marginTop: 14, flexDirection: 'row', alignItems: 'center', gap: 4 },
-  backHintText: { fontSize: 12, color: colors.muted },
+  backHint: {
+    marginTop: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderRadius: radius.pill,
+    backgroundColor: colors.surface,
+  },
+  backHintText: { fontSize: 12, fontWeight: '600', color: colors.text },
 });

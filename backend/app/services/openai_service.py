@@ -55,12 +55,26 @@ class OpenAIService:
         instructions: str,
         context: dict[str, object],
         response_schema: type[SchemaT],
+        image_data_url: str | None = None,
     ) -> SchemaT:
         try:
+            context_text = json.dumps(context, ensure_ascii=False, default=str)
+            input_payload: str | list[dict[str, object]] = context_text
+            if image_data_url:
+                input_payload = [
+                    {
+                        "role": "user",
+                        "content": [
+                            {"type": "input_text", "text": context_text},
+                            {"type": "input_image", "image_url": image_data_url},
+                        ],
+                    }
+                ]
+
             response = await self.client.responses.parse(
                 model=self.settings.openai_model,
                 instructions=instructions,
-                input=json.dumps(context, ensure_ascii=False, default=str),
+                input=input_payload,
                 text_format=response_schema,
                 store=False,
             )
@@ -89,9 +103,14 @@ class OpenAIService:
                 502,
             ) from exc
 
-    async def analyze_causes(self, context: dict[str, object]) -> CauseAnalysisResult:
+    async def analyze_causes(
+        self, context: dict[str, object], image_data_url: str | None = None
+    ) -> CauseAnalysisResult:
         return await self._parse(
-            CAUSE_ANALYSIS_INSTRUCTIONS, context, CauseAnalysisResult
+            CAUSE_ANALYSIS_INSTRUCTIONS,
+            context,
+            CauseAnalysisResult,
+            image_data_url=image_data_url,
         )
 
     async def create_recommendation(

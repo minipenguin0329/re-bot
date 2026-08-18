@@ -1,4 +1,7 @@
+import base64
+import logging
 from datetime import datetime
+from pathlib import Path
 from typing import Any
 from uuid import UUID
 
@@ -12,6 +15,27 @@ from app.repositories.recommendation_repository import RecommendationRepository
 from app.repositories.symptom_repository import SymptomRepository
 from app.schemas.analysis import AnalysisHistoryItem, AnalysisResponse, CauseAnalysisResult
 from app.services.openai_service import OpenAIService
+from app.services.storage_service import StorageService
+
+logger = logging.getLogger(__name__)
+
+_IMAGE_MIME_TYPES = {".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png", ".webp": "image/webp"}
+
+
+def _build_image_data_url(client: Client, image_path: str | None) -> str | None:
+    if not image_path:
+        return None
+    mime_type = _IMAGE_MIME_TYPES.get(Path(image_path).suffix.lower())
+    if mime_type is None:
+        return None
+    try:
+        contents = client.storage.from_(StorageService.bucket_name).download(image_path)
+    except Exception:
+        # 사진 분석은 부가 기능이라, 스토리지 조회가 실패해도 자가진단 자체는 계속 진행합니다.
+        logger.warning("Failed to download symptom image for analysis: %s", image_path)
+        return None
+    encoded = base64.b64encode(contents).decode("ascii")
+    return f"data:{mime_type};base64,{encoded}"
 
 
 def _age_group(birth_year: int | None) -> str | None:
@@ -91,6 +115,7 @@ class AnalysisService:
         )
         feedback = RecommendationRepository(self.client).list_recent_feedback(user_id)
         context = _build_analysis_context(symptom, profile, logs, similar, feedback)
+        image_data_url = _build_image_data_url(self.client, symptom.get("image_path"))
 
         model_name = self.openai_service.model_name
         if not model_name:
@@ -102,14 +127,19 @@ class AnalysisService:
         analysis = repository.create_pending(user_id, symptom_id, model_name)
         analysis_id = UUID(str(analysis["id"]))
         try:
-            result: CauseAnalysisResult = await self.openai_service.analyze_causes(context)
+            result: CauseAnalysisResult = await self.openai_service.analyze_causes(
+                context, image_data_url=image_data_url
+            )
             candidates = repository.save_candidates(analysis_id, result.candidates)
-            repository.set_status(analysis_id, user_id, "completed")
+            repository.set_status(
+                analysis_id, user_id, "completed", symptom_keyword=result.symptom_keyword
+            )
         except AppError:
             repository.set_status(analysis_id, user_id, "failed")
             raise
 
         analysis["status"] = "completed"
+        analysis["symptom_keyword"] = result.symptom_keyword
         analysis["candidates"] = candidates
         return AnalysisResponse.model_validate(analysis)
 

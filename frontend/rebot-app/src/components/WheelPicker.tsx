@@ -51,6 +51,6 @@ export function WheelPicker({ items, initialIndex = 0, onChange, itemHeight = 65
 const styles = StyleSheet.create({
   wheel: { width: '100%', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   pill: { position: 'absolute', alignSelf: 'center', borderRadius: radius.md, backgroundColor: colors.warningSoft },
-  selected: { fontSize: 21, color: '#88888E', fontWeight: '600' },
-  faded: { fontSize: 20, color: '#D4D4D7' },
+  selected: { fontSize: 21, color: '#88888E', fontWeight: '600', includeFontPadding: false, textAlignVertical: 'center' },
+  faded: { fontSize: 20, color: '#D4D4D7', includeFontPadding: false, textAlignVertical: 'center' },
 });

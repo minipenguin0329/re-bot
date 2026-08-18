@@ -184,7 +184,9 @@ class FakeDatabase:
 class FakeOpenAIService:
     model_name = "test-model"
 
-    async def analyze_causes(self, _: dict[str, object]) -> CauseAnalysisResult:
+    async def analyze_causes(
+        self, _: dict[str, object], image_data_url: str | None = None
+    ) -> CauseAnalysisResult:
         return CauseAnalysisResult(
             candidates=[
                 CauseCandidate(
@@ -193,7 +195,8 @@ class FakeOpenAIService:
                     evidence=["최근 기록의 수면 시간이 짧은 날이 있었습니다."],
                     confirmation_question="최근 잠이 부족했다고 느끼셨나요?",
                 )
-            ]
+            ],
+            symptom_keyword="수면부족",
         )
 
     async def create_recommendation(
@@ -261,6 +264,11 @@ class FakeBucket:
         for path in paths:
             self.files.pop(path, None)
         return [{"name": path} for path in paths]
+
+    def download(self, path: str) -> bytes:
+        if path not in self.files:
+            raise FileNotFoundError(path)
+        return self.files[path]
 
 
 class FakeStorage:

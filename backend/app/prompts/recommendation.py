@@ -24,6 +24,10 @@ learned_preferences와 recent_feedback은 사용자가 이전 제안에 남긴 �
 그 사유에 나타난 제약은 반복하지 마세요. 피드백이 없거나 서로 충돌하면 현재 상황과
 안전성을 우선하세요. special_notes_classification은 사용자가 직접 적은 특이사항을
 분류한 참고 정보일 뿐 진단으로 취급하지 마세요.
+
+모든 텍스트 필드(action, reason, name, benefit, selection_tip 등)는 마크다운 문법(**, #, -,
+1. 같은 목록/강조 기호, 링크 표기 등) 없이 순수 텍스트로만 작성하세요. 앱 화면에 마크다운이
+해석되지 않고 그대로 보이기 때문입니다.
 """.strip()
 
 ALTERNATIVE_INSTRUCTIONS = """
@@ -32,5 +36,6 @@ ALTERNATIVE_INSTRUCTIONS = """
 실행하기 쉬운 행동으로 바꾸세요. 사용자의 제약을 무시하지 마세요.
 learned_preferences의 누적 제약과 special_notes_classification도 함께 고려하되,
 특이사항을 진단으로 취급하거나 입력에 없는 의학적 사실을 추론하지 마세요.
+모든 텍스트 필드는 마크다운 문법 없이 순수 텍스트로만 작성하세요.
 """.strip()
 

@@ -101,8 +101,12 @@ create table if not exists public.analyses (
   model_name text not null,
   selection_status text not null default 'unselected'
     check (selection_status in ('unselected', 'candidate', 'none')),
+  symptom_keyword text,
   created_at timestamptz not null default timezone('utc', now())
 );
+
+alter table public.analyses
+  add column if not exists symptom_keyword text;
 
 create table if not exists public.analysis_candidates (
   id uuid primary key default gen_random_uuid(),

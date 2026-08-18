@@ -1,15 +1,26 @@
+import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
-import { AppHeader } from '@/src/components/AppHeader';
 import { MindMap } from '@/src/components/MindMap';
 import { Screen } from '@/src/components/Screen';
+import { TodayCheckInCard } from '@/src/components/TodayCheckInCard';
+import { WellnessSummaryCard } from '@/src/components/WellnessSummaryCard';
 import { useMindMapCauses } from '@/src/hooks/useMindMapCauses';
 import { backendApi } from '@/src/services/api';
 import { useProfile } from '@/src/store/ProfileContext';
 import type { AnalysisHistoryItem } from '@/src/types/api';
-import { colors } from '@/src/theme/tokens';
+import { colors, radius } from '@/src/theme/tokens';
+
+function timeGreeting() {
+  const hour = new Date().getHours();
+  if (hour < 11) return '상쾌한 아침이에요';
+  if (hour < 17) return '활기찬 오후 보내세요';
+  if (hour < 21) return '편안한 저녁이에요';
+  return '오늘 하루도 고생 많으셨어요';
+}
 
 const FOLLOW_UP_DELAY_MS = 3 * 60 * 60 * 1000;
 // Expo Go/개발 빌드에서는 UI를 바로 검증할 수 있도록 3시간 대기를 생략합니다.
@@ -38,7 +49,7 @@ function followUpTitle(description: string) {
 }
 
 export default function HomeScreen() {
-  const { photoUri } = useProfile();
+  const { name, photoUri } = useProfile();
   const { causes, loading: mindMapLoading } = useMindMapCauses();
   const [followUp, setFollowUp] = useState<AnalysisHistoryItem | null>(null);
   const [resolvedId, setResolvedId] = useState<string | null>(null);
@@ -114,26 +125,49 @@ export default function HomeScreen() {
 
   return (
     <Screen bottomSafe={false} scroll>
-      <AppHeader
-        title="홈화면"
-        rightIcon="notifications-outline"
-        rightBadge={Boolean(visibleFollowUp && !read)}
-        onRightPress={() => setNotificationsOpen((current) => !current)}
-      />
-      {notificationsOpen && followUp && (
-        <View style={styles.notificationPanel}>
-          <Text style={styles.notificationTitle}>알림</Text>
-          <Pressable style={styles.notificationItem} onPress={isResolved ? undefined : goAnswer}>
-            {!read && <View style={styles.notificationDot} />}
-            <View style={styles.notificationCopyArea}>
-              <Text style={styles.notificationItemTitle} numberOfLines={2}>{followUpTitle(followUp.symptom_description)}</Text>
-              <Text style={styles.notificationItemCopy}>{isResolved ? '사용자가 증상이 해결되었다고 응답했어요.' : '이전 대화 내역에서 현재 상태를 확인해 주세요.'}</Text>
-              {isResolved && <Text style={styles.resolvedStatus}>해결됨</Text>}
-            </View>
+      <View style={styles.body}>
+        <View style={styles.topBar}>
+          <Pressable hitSlop={12} onPress={() => setNotificationsOpen((current) => !current)}>
+            <Ionicons name="notifications-outline" size={24} color={colors.text} />
+            {Boolean(visibleFollowUp && !read) && <View style={styles.badge} />}
           </Pressable>
         </View>
-      )}
-      <View style={styles.body}>
+        {notificationsOpen && followUp && (
+          <View style={styles.notificationPanel}>
+            <Text style={styles.notificationTitle}>알림</Text>
+            <Pressable style={styles.notificationItem} onPress={isResolved ? undefined : goAnswer}>
+              {!read && <View style={styles.notificationDot} />}
+              <View style={styles.notificationCopyArea}>
+                <Text style={styles.notificationItemTitle} numberOfLines={2}>{followUpTitle(followUp.symptom_description)}</Text>
+                <Text style={styles.notificationItemCopy}>{isResolved ? '사용자가 증상이 해결되었다고 응답했어요.' : '이전 대화 내역에서 현재 상태를 확인해 주세요.'}</Text>
+                {isResolved && <Text style={styles.resolvedStatus}>해결됨</Text>}
+              </View>
+            </Pressable>
+          </View>
+        )}
+        <View style={styles.hero}>
+          <View style={styles.heroAvatar}>
+            {photoUri ? <Image source={{ uri: photoUri }} style={styles.heroAvatarImage} /> : <Ionicons name="person" size={22} color="#9A9A9F" />}
+          </View>
+          <View style={styles.heroTextArea}>
+            <Text style={styles.heroGreeting}>{timeGreeting()}, {name}님 👋</Text>
+            <Text style={styles.heroCopy}>오늘 컨디션은 어떠세요? 지금 바로 확인해보세요.</Text>
+          </View>
+        </View>
+
+        <View style={styles.quickActions}>
+          <Pressable style={styles.quickCard} onPress={() => router.push('/(tabs)/diagnosis')}>
+            <View style={[styles.quickIcon, styles.quickIconAccent]}><Ionicons name="checkbox-outline" size={18} color="#8A6B00" /></View>
+            <Text style={styles.quickTitle} numberOfLines={1}>AI 자가진단</Text>
+            <Ionicons name="chevron-forward" size={15} color={colors.muted} />
+          </Pressable>
+          <Pressable style={styles.quickCard} onPress={() => router.push('/(tabs)/solution')}>
+            <View style={[styles.quickIcon, styles.quickIconDark]}><Ionicons name="bulb" size={18} color={colors.white} /></View>
+            <Text style={styles.quickTitle} numberOfLines={1}>AI 솔루션</Text>
+            <Ionicons name="chevron-forward" size={15} color={colors.muted} />
+          </Pressable>
+        </View>
+
         {visibleFollowUp && (
           <View style={styles.followUpCard}>
             <View style={styles.copyArea}>
@@ -150,6 +184,9 @@ export default function HomeScreen() {
             </View>
           </View>
         )}
+        <View style={styles.checkInSection}><TodayCheckInCard /></View>
+
+        <View style={styles.wellnessSection}><WellnessSummaryCard /></View>
         <Text style={styles.mindMapTitle}>원인 마인드맵</Text>
         <Text style={styles.mindMapCopy}>가지를 눌러 어떤 후보가 있었는지 확인해보세요</Text>
         {mindMapLoading ? (
@@ -170,8 +207,99 @@ const styles = StyleSheet.create({
   body: {
     flex: 1,
     paddingHorizontal: 24,
-    paddingTop: 38,
+    paddingTop: 20,
     paddingBottom: 40,
+  },
+  topBar: {
+    marginBottom: 12,
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+  },
+  badge: {
+    position: 'absolute',
+    top: -1,
+    right: -1,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#F4D36A',
+    borderWidth: 1,
+    borderColor: colors.white,
+  },
+  hero: {
+    marginBottom: 24,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+  },
+  heroAvatar: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.surfaceStrong,
+    overflow: 'hidden',
+  },
+  heroAvatarImage: {
+    width: 50,
+    height: 50,
+  },
+  heroTextArea: {
+    flex: 1,
+  },
+  heroGreeting: {
+    fontSize: 19,
+    lineHeight: 27,
+    fontWeight: '800',
+    color: colors.text,
+  },
+  heroCopy: {
+    marginTop: 4,
+    fontSize: 13,
+    lineHeight: 19,
+    color: colors.muted,
+  },
+  quickActions: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  quickCard: {
+    flex: 1,
+    height: 56,
+    paddingHorizontal: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+  },
+  quickIcon: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  quickIconAccent: {
+    backgroundColor: colors.accent,
+  },
+  quickIconDark: {
+    backgroundColor: colors.text,
+  },
+  quickTitle: {
+    flex: 1,
+    fontSize: 13,
+    fontWeight: '800',
+    color: colors.text,
+  },
+  checkInSection: {
+    marginTop: 24,
+  },
+  wellnessSection: {
+    marginTop: 24,
   },
   mindMapTitle: {
     marginTop: 32,
@@ -197,6 +325,7 @@ const styles = StyleSheet.create({
     color: colors.muted,
   },
   followUpCard: {
+    marginTop: 24,
     minHeight: 166,
     padding: 24,
     borderRadius: 16,
@@ -251,8 +380,8 @@ const styles = StyleSheet.create({
   notificationPanel: {
     position: 'absolute',
     zIndex: 20,
-    top: 54,
-    right: 20,
+    top: 44,
+    right: 24,
     width: 302,
     padding: 16,
     borderRadius: 16,

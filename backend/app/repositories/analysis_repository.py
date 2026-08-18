@@ -29,10 +29,19 @@ class AnalysisRepository:
         )
         return rows[0]
 
-    def set_status(self, analysis_id: UUID, user_id: UUID, status: str) -> None:
+    def set_status(
+        self,
+        analysis_id: UUID,
+        user_id: UUID,
+        status: str,
+        symptom_keyword: str | None = None,
+    ) -> None:
+        payload: dict[str, Any] = {"status": status}
+        if symptom_keyword is not None:
+            payload["symptom_keyword"] = symptom_keyword
         execute_query(
             self.client.table("analyses")
-            .update({"status": status})
+            .update(payload)
             .eq("id", str(analysis_id))
             .eq("user_id", str(user_id))
         )

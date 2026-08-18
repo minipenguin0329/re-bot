@@ -78,6 +78,7 @@ export type AnalysisResponse = {
   status: 'pending' | 'completed' | 'failed';
   model_name: string;
   selection_status: 'unselected' | 'candidate' | 'none';
+  symptom_keyword: string | null;
   created_at: string;
   candidates: AnalysisCandidate[];
 };

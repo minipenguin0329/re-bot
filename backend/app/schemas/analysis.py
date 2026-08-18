@@ -16,6 +16,10 @@ class CauseCandidate(BaseModel):
 
 class CauseAnalysisResult(BaseModel):
     candidates: Annotated[list[CauseCandidate], Field(max_length=8)]
+    # 마인드맵 노드에 쓸 짧은 명사형 키워드입니다. AI가 규칙(짧은 명사형)을 안 지켜도
+    # 분석 자체가 실패하지 않도록 길이 제약은 넉넉하게 두고, 실제 "명사 하나인가" 검증은
+    # 프론트(text.ts의 sanitizeAiNounLabel)에서 하고 실패하면 사전 매칭으로만 대체합니다.
+    symptom_keyword: Annotated[str, Field(min_length=1, max_length=40)]
 
     model_config = ConfigDict(extra="forbid")
 
@@ -40,6 +44,7 @@ class AnalysisResponse(BaseModel):
     status: Literal["pending", "completed", "failed"]
     model_name: str
     selection_status: Literal["unselected", "candidate", "none"]
+    symptom_keyword: str | None = None
     created_at: datetime
     candidates: list[AnalysisCandidateResponse]
 

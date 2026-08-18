@@ -1,3 +1,4 @@
+import base64
 from datetime import datetime, timezone
 from types import SimpleNamespace
 from uuid import uuid4
@@ -17,6 +18,7 @@ from app.schemas.recommendation import (
     RecommendationResult,
     SupportResource,
 )
+from app.services.analysis_service import _build_image_data_url
 from app.services.recommendation_service import _feedback_preferences
 from app.services.openai_service import OpenAIService
 from tests.conftest import USER_A, USER_B, FakeDatabase
@@ -32,13 +34,17 @@ def candidate(number: int = 1) -> CauseCandidate:
 
 
 def test_ai_candidates_allow_up_to_eight() -> None:
-    result = CauseAnalysisResult(candidates=[candidate(i) for i in range(8)])
+    result = CauseAnalysisResult(
+        candidates=[candidate(i) for i in range(8)], symptom_keyword="두통"
+    )
     assert len(result.candidates) == 8
 
 
 def test_ai_candidates_cannot_exceed_eight() -> None:
     with pytest.raises(ValidationError):
-        CauseAnalysisResult(candidates=[candidate(i) for i in range(9)])
+        CauseAnalysisResult(
+            candidates=[candidate(i) for i in range(9)], symptom_keyword="두통"
+        )
 
 
 def test_recommendations_cannot_exceed_five_including_alternative() -> None:
@@ -185,6 +191,25 @@ def test_profile_special_notes_are_classified_and_saved(
         "allergy",
     }
     assert fake_db.tables["profiles"][0]["special_notes_classification"]
+
+
+def test_build_image_data_url_returns_none_without_path(fake_db: FakeDatabase) -> None:
+    assert _build_image_data_url(fake_db, None) is None
+
+
+def test_build_image_data_url_encodes_downloaded_image(fake_db: FakeDatabase) -> None:
+    fake_db.storage.files["user/img.png"] = b"fake-image-bytes"
+
+    result = _build_image_data_url(fake_db, "user/img.png")
+
+    encoded = base64.b64encode(b"fake-image-bytes").decode("ascii")
+    assert result == f"data:image/png;base64,{encoded}"
+
+
+def test_build_image_data_url_returns_none_when_missing_from_storage(
+    fake_db: FakeDatabase,
+) -> None:
+    assert _build_image_data_url(fake_db, "user/missing.jpg") is None
 
 
 def test_analysis_saves_structured_candidates(
