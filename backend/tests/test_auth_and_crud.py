@@ -26,7 +26,7 @@ def test_user_cannot_read_another_users_daily_log(
             "date": "2026-08-08",
             "sleep_hours": 7,
             "sleep_irregular": False,
-            "stress_level": 2,
+            "breakfast": True,
             "created_at": now,
             "updated_at": now,
         }
@@ -69,10 +69,10 @@ def test_sleep_hours_validation(authenticated_client: TestClient) -> None:
         assert response.json()["error"]["code"] == "VALIDATION_ERROR"
 
 
-def test_stress_level_validation(authenticated_client: TestClient) -> None:
-    for invalid_value in (0, 6):
+def test_caffeine_count_validation(authenticated_client: TestClient) -> None:
+    for invalid_value in (-1, 101):
         response = authenticated_client.post(
-            "/api/logs", json={"stress_level": invalid_value}
+            "/api/logs", json={"caffeine_count": invalid_value}
         )
         assert response.status_code == 422
         assert response.json()["error"]["code"] == "VALIDATION_ERROR"

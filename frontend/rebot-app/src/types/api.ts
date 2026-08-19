@@ -32,9 +32,10 @@ export type DailyLogPayload = {
   date?: string;
   sleep_hours?: number | null;
   sleep_irregular?: boolean;
-  stress_level?: number | null;
   water_ml?: number | null;
-  exercise_minutes?: number | null;
+  breakfast?: boolean;
+  lunch?: boolean;
+  dinner?: boolean;
   caffeine_count?: number | null;
   alcohol?: boolean | null;
   meal_note?: string | null;

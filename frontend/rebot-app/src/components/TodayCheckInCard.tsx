@@ -83,9 +83,10 @@ export function TodayCheckInCard() {
   const [saving, setSaving] = useState(false);
   const [sleepHours, setSleepHours] = useState(7);
   const [sleepIrregular, setSleepIrregular] = useState(false);
-  const [stressLevel, setStressLevel] = useState(3);
-  const [exerciseMinutes, setExerciseMinutes] = useState(0);
   const [caffeineCount, setCaffeineCount] = useState(0);
+  const [breakfast, setBreakfast] = useState(false);
+  const [lunch, setLunch] = useState(false);
+  const [dinner, setDinner] = useState(false);
   const [saved, setSaved] = useState(false);
   const [justSaved, setJustSaved] = useState(false);
   // 오늘 이미 기록이 있으면 슬라이드를 잠가서, "수정하기"를 눌러야만 값을 바꿀 수 있게 합니다.
@@ -104,9 +105,10 @@ export function TodayCheckInCard() {
       setExistingLog(today);
       setSleepHours(today?.sleep_hours ?? 7);
       setSleepIrregular(today?.sleep_irregular ?? false);
-      setStressLevel(today?.stress_level ?? 3);
-      setExerciseMinutes(today?.exercise_minutes ?? 0);
       setCaffeineCount(today?.caffeine_count ?? 0);
+      setBreakfast(today?.breakfast ?? false);
+      setLunch(today?.lunch ?? false);
+      setDinner(today?.dinner ?? false);
       setSaved(Boolean(today));
       setEditing(!today);
     } catch {
@@ -130,9 +132,10 @@ export function TodayCheckInCard() {
       date: todayIso(),
       sleep_hours: sleepHours,
       sleep_irregular: sleepIrregular,
-      stress_level: stressLevel,
-      exercise_minutes: exerciseMinutes,
       caffeine_count: caffeineCount,
+      breakfast,
+      lunch,
+      dinner,
     };
     try {
       const result = existingLog
@@ -175,13 +178,31 @@ export function TodayCheckInCard() {
         )}
       </View>
       <Text style={styles.hint}>
-        {editing ? '막대를 좌우로 밀어서 값을 조절해보세요' : '수정하기를 누르면 값을 다시 조절할 수 있어요'}
+        지금 가볍게 기록해두시면, 다음 자가진단에서 더 정확한 진단을 받으실 수 있도록 도와드려요.
       </Text>
 
       <BarSlider label="수면 시간" value={sleepHours} min={0} max={12} step={0.5} unit="시간" disabled={!editing} onChange={(v) => { setSleepHours(v); markDirty(); }} />
-      <BarSlider label="스트레스 지수" value={stressLevel} min={1} max={5} step={1} unit="/5" showMaxSuffix={false} disabled={!editing} onChange={(v) => { setStressLevel(v); markDirty(); }} />
-      <BarSlider label="운동 시간" value={exerciseMinutes} min={0} max={120} step={5} unit="분" disabled={!editing} onChange={(v) => { setExerciseMinutes(v); markDirty(); }} />
-      <BarSlider label="카페인 섭취" value={caffeineCount} min={0} max={5} step={1} unit="잔" disabled={!editing} onChange={(v) => { setCaffeineCount(v); markDirty(); }} />
+      <BarSlider label="카페인" value={caffeineCount} min={0} max={5} step={1} unit="잔" disabled={!editing} onChange={(v) => { setCaffeineCount(v); markDirty(); }} />
+
+      <View style={styles.mealsField}>
+        <Text style={styles.sliderLabel}>오늘 챙겨 드신 끼니</Text>
+        <View style={styles.mealChipsRow}>
+          {([
+            { key: 'breakfast', label: '아침', value: breakfast, onToggle: () => setBreakfast((current) => !current) },
+            { key: 'lunch', label: '점심', value: lunch, onToggle: () => setLunch((current) => !current) },
+            { key: 'dinner', label: '저녁', value: dinner, onToggle: () => setDinner((current) => !current) },
+          ] as const).map((meal) => (
+            <Pressable
+              key={meal.key}
+              disabled={!editing}
+              style={[styles.mealChip, meal.value && styles.mealChipActive, !editing && styles.mealChipDisabled]}
+              onPress={() => { meal.onToggle(); markDirty(); }}
+            >
+              <Text style={[styles.mealChipText, meal.value && styles.mealChipTextActive]}>{meal.label}</Text>
+            </Pressable>
+          ))}
+        </View>
+      </View>
 
       <View style={styles.footerRow}>
         <Pressable
@@ -306,6 +327,36 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 3,
     elevation: 3,
+  },
+  mealsField: {
+    marginTop: 14,
+  },
+  mealChipsRow: {
+    marginTop: 6,
+    flexDirection: 'row',
+    gap: 8,
+  },
+  mealChip: {
+    flex: 1,
+    height: 38,
+    borderRadius: radius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.surface,
+  },
+  mealChipActive: {
+    backgroundColor: colors.accent,
+  },
+  mealChipText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.muted,
+  },
+  mealChipTextActive: {
+    color: '#5C4900',
+  },
+  mealChipDisabled: {
+    opacity: 0.5,
   },
   footerRow: {
     marginTop: 16,

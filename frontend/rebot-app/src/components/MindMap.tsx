@@ -26,6 +26,20 @@ function causeSeverityColors(symptomCount: number): { background: string; border
 
 type BranchNode = { id: string; label: string };
 
+// ChoiceCard의 설명 텍스트와 같은 패턴입니다 — 회색 본문을 2줄로 줄여두고, 누르면 전체가 펼쳐집니다.
+function DetailReason({ text }: { text: string }) {
+  const [expanded, setExpanded] = useState(false);
+  return (
+    <Text
+      style={styles.detailReason}
+      numberOfLines={expanded ? undefined : 2}
+      onPress={() => setExpanded((current) => !current)}
+    >
+      {text}
+    </Text>
+  );
+}
+
 type NodeColor<T> = string | ((node: T) => string);
 
 type BranchProps<T extends BranchNode> = {
@@ -209,7 +223,7 @@ export function MindMap({ photoUri = null, causes = DUMMY_MIND_MAP_CAUSES }: Pro
                 <View style={styles.detailAccent} />
                 <View style={styles.detailBody}>
                   <Text style={styles.detailTitle}>{detail.title}</Text>
-                  <Text style={styles.detailReason}>{detail.reason}</Text>
+                  <DetailReason text={detail.reason} />
                 </View>
               </View>
             )),

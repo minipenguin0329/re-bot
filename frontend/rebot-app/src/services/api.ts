@@ -58,23 +58,29 @@ export function getErrorMessage(error: unknown) {
 // 진행 중인 동일 GET 요청은 새로 fetch하지 않고 기존 Promise를 재사용합니다.
 const inflightGetRequests = new Map<string, Promise<unknown>>();
 
+// 위 문제는 "같은 경로"에만 국한되지 않습니다 — 마인드맵처럼 서로 다른 경로로 여러 GET을
+// Promise.all로 한꺼번에 쏘는 경우(예: 분석 기록 여러 건을 동시에 조회)에도 이 환경의 fetch가
+// 응답 본문을 공유해 같은 에러를 냅니다. 그래서 GET 요청은 전부 한 줄로 세워서(직렬화) 한
+// 번에 하나씩만 실제로 fetch가 나가도록 합니다. POST/PATCH 등은 이런 동시 호출 패턴이 없어서
+// 그대로 둡니다.
+let getQueueTail: Promise<unknown> = Promise.resolve();
+
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   const method = (init.method ?? 'GET').toUpperCase();
-  if (method === 'GET') {
-    const existing = inflightGetRequests.get(path);
-    if (existing) return existing as Promise<T>;
-  }
+  if (method !== 'GET') return performRequest<T>(path, init);
 
-  const promise = performRequest<T>(path, init);
+  const existing = inflightGetRequests.get(path);
+  if (existing) return existing as Promise<T>;
 
-  if (method === 'GET') {
-    inflightGetRequests.set(path, promise);
-    void promise.finally(() => {
-      if (inflightGetRequests.get(path) === promise) inflightGetRequests.delete(path);
-    });
-  }
+  const queued = getQueueTail.catch(() => undefined).then(() => performRequest<T>(path, init));
+  getQueueTail = queued.catch(() => undefined);
 
-  return promise;
+  inflightGetRequests.set(path, queued);
+  void queued.finally(() => {
+    if (inflightGetRequests.get(path) === queued) inflightGetRequests.delete(path);
+  });
+
+  return queued;
 }
 
 async function performRequest<T>(path: string, init: RequestInit = {}): Promise<T> {

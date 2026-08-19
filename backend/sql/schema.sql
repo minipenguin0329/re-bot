@@ -74,6 +74,9 @@ create table if not exists public.daily_logs (
   exercise_minutes integer check (
     exercise_minutes is null or exercise_minutes between 0 and 1440
   ),
+  breakfast boolean not null default false,
+  lunch boolean not null default false,
+  dinner boolean not null default false,
   caffeine_count integer check (caffeine_count is null or caffeine_count between 0 and 100),
   alcohol boolean,
   meal_note text check (meal_note is null or char_length(meal_note) <= 2000),
@@ -82,6 +85,13 @@ create table if not exists public.daily_logs (
   updated_at timestamptz not null default timezone('utc', now()),
   unique (user_id, date)
 );
+
+alter table public.daily_logs
+  add column if not exists breakfast boolean not null default false;
+alter table public.daily_logs
+  add column if not exists lunch boolean not null default false;
+alter table public.daily_logs
+  add column if not exists dinner boolean not null default false;
 
 create table if not exists public.symptoms (
   id uuid primary key default gen_random_uuid(),

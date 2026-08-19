@@ -7,7 +7,6 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-nati
 import { MindMap } from '@/src/components/MindMap';
 import { Screen } from '@/src/components/Screen';
 import { TodayCheckInCard } from '@/src/components/TodayCheckInCard';
-import { WellnessSummaryCard } from '@/src/components/WellnessSummaryCard';
 import { useMindMapCauses } from '@/src/hooks/useMindMapCauses';
 import { backendApi } from '@/src/services/api';
 import { useProfile } from '@/src/store/ProfileContext';
@@ -186,7 +185,6 @@ export default function HomeScreen() {
         )}
         <View style={styles.checkInSection}><TodayCheckInCard /></View>
 
-        <View style={styles.wellnessSection}><WellnessSummaryCard /></View>
         <Text style={styles.mindMapTitle}>원인 마인드맵</Text>
         <Text style={styles.mindMapCopy}>가지를 눌러 어떤 후보가 있었는지 확인해보세요</Text>
         {mindMapLoading ? (
@@ -296,9 +294,6 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   checkInSection: {
-    marginTop: 24,
-  },
-  wellnessSection: {
     marginTop: 24,
   },
   mindMapTitle: {

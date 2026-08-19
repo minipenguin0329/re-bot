@@ -70,8 +70,9 @@ def _build_analysis_context(
         "date",
         "sleep_hours",
         "sleep_irregular",
-        "stress_level",
-        "exercise_minutes",
+        "breakfast",
+        "lunch",
+        "dinner",
         "caffeine_count",
         "meal_note",
     )

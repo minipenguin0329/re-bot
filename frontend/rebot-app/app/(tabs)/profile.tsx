@@ -4,6 +4,7 @@ import { router } from 'expo-router';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { AppHeader } from '@/src/components/AppHeader';
 import { Screen } from '@/src/components/Screen';
+import { WellnessSummaryCard } from '@/src/components/WellnessSummaryCard';
 import { getErrorMessage } from '@/src/services/api';
 import { useAuth } from '@/src/store/AuthContext';
 import { useProfile } from '@/src/store/ProfileContext';
@@ -34,10 +35,12 @@ export default function ProfileScreen() {
       <View style={styles.avatar}>{photoUri ? <Image source={{ uri: photoUri }} style={styles.avatarImage} /> : <Ionicons name="person" size={34} color="#9A9A9F" />}</View>
       <View><Text style={styles.name}>{name}</Text><Text style={styles.copy}>{bio}</Text></View>
     </View>
-    
+
+    <View style={styles.wellnessWrap}><WellnessSummaryCard /></View>
+
     <View style={styles.menu}>{menus.map((item) => <Pressable key={item.label} onPress={() => router.push(item.route)} style={styles.menuRow}><Ionicons name={item.icon} size={22} color="#777" /><Text style={styles.menuText}>{item.label}</Text><Ionicons name="chevron-forward" size={20} color="#BBB" /></Pressable>)}</View>
     <Pressable style={styles.logout} onPress={handleLogout}><Ionicons name="log-out-outline" size={22} /><Text style={styles.logoutText}>로그아웃</Text></Pressable>
   </ScrollView></Screen>;
 }
 
-const styles = StyleSheet.create({ scroll: { flex: 1 }, body: { flexGrow: 1, paddingHorizontal: 24, paddingTop: 30, paddingBottom: 36 }, profile: { flexDirection: 'row', alignItems: 'center', gap: 20, marginHorizontal: 20, marginBottom: 42 }, avatar: { width: 65, height: 65, borderRadius: 33, backgroundColor: colors.surfaceStrong, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }, avatarImage: { width: 65, height: 65 }, name: { fontSize: 16, fontWeight: '700' }, copy: { fontSize: 13, color: colors.muted, marginTop: 8 }, menu: { borderTopWidth: 1, borderColor: colors.border }, menuRow: { height: 70, borderBottomWidth: 1, borderColor: colors.border, flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 10 }, menuText: { flex: 1, fontSize: 16, fontWeight: '500' }, logout: { marginTop: 68, height: 70, borderTopWidth: 1, borderBottomWidth: 1, borderColor: colors.border, flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 10 }, logoutText: { fontSize: 16, fontWeight: '500' } });
+const styles = StyleSheet.create({ scroll: { flex: 1 }, body: { flexGrow: 1, paddingHorizontal: 24, paddingTop: 30, paddingBottom: 36 }, profile: { flexDirection: 'row', alignItems: 'center', gap: 20, marginHorizontal: 20, marginBottom: 32 }, wellnessWrap: { marginBottom: 32 }, avatar: { width: 65, height: 65, borderRadius: 33, backgroundColor: colors.surfaceStrong, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }, avatarImage: { width: 65, height: 65 }, name: { fontSize: 16, fontWeight: '700' }, copy: { fontSize: 13, color: colors.muted, marginTop: 8 }, menu: { borderTopWidth: 1, borderColor: colors.border }, menuRow: { height: 70, borderBottomWidth: 1, borderColor: colors.border, flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 10 }, menuText: { flex: 1, fontSize: 16, fontWeight: '500' }, logout: { marginTop: 68, height: 70, borderTopWidth: 1, borderBottomWidth: 1, borderColor: colors.border, flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 10 }, logoutText: { fontSize: 16, fontWeight: '500' } });

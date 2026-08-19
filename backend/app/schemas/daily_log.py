@@ -12,9 +12,10 @@ class DailyLogBase(BaseModel):
     date: Date = Field(default_factory=Date.today)
     sleep_hours: float | None = Field(default=None, ge=0, le=24)
     sleep_irregular: bool = False
-    stress_level: int | None = Field(default=None, ge=1, le=5)
     water_ml: int | None = Field(default=None, ge=0, le=20000)
-    exercise_minutes: int | None = Field(default=None, ge=0, le=1440)
+    breakfast: bool = False
+    lunch: bool = False
+    dinner: bool = False
     caffeine_count: int | None = Field(default=None, ge=0, le=100)
     alcohol: bool | None = None
     meal_note: Note | None = None
@@ -29,9 +30,10 @@ class DailyLogUpdate(BaseModel):
     date: Date | None = None
     sleep_hours: float | None = Field(default=None, ge=0, le=24)
     sleep_irregular: bool | None = None
-    stress_level: int | None = Field(default=None, ge=1, le=5)
     water_ml: int | None = Field(default=None, ge=0, le=20000)
-    exercise_minutes: int | None = Field(default=None, ge=0, le=1440)
+    breakfast: bool | None = None
+    lunch: bool | None = None
+    dinner: bool | None = None
     caffeine_count: int | None = Field(default=None, ge=0, le=100)
     alcohol: bool | None = None
     meal_note: Note | None = None
