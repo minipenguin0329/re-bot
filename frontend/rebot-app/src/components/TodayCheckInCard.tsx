@@ -82,7 +82,6 @@ export function TodayCheckInCard() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [sleepHours, setSleepHours] = useState(7);
-  const [sleepIrregular, setSleepIrregular] = useState(false);
   const [caffeineCount, setCaffeineCount] = useState(0);
   const [breakfast, setBreakfast] = useState(false);
   const [lunch, setLunch] = useState(false);
@@ -104,7 +103,6 @@ export function TodayCheckInCard() {
       const today = logs.find((log) => log.date === todayIso()) ?? null;
       setExistingLog(today);
       setSleepHours(today?.sleep_hours ?? 7);
-      setSleepIrregular(today?.sleep_irregular ?? false);
       setCaffeineCount(today?.caffeine_count ?? 0);
       setBreakfast(today?.breakfast ?? false);
       setLunch(today?.lunch ?? false);
@@ -131,7 +129,6 @@ export function TodayCheckInCard() {
     const payload = {
       date: todayIso(),
       sleep_hours: sleepHours,
-      sleep_irregular: sleepIrregular,
       caffeine_count: caffeineCount,
       breakfast,
       lunch,
@@ -205,13 +202,6 @@ export function TodayCheckInCard() {
       </View>
 
       <View style={styles.footerRow}>
-        <Pressable
-          disabled={!editing}
-          style={[styles.irregularChip, sleepIrregular && styles.irregularChipActive, !editing && styles.irregularChipDisabled]}
-          onPress={() => { setSleepIrregular((current) => !current); markDirty(); }}
-        >
-          <Text style={[styles.irregularChipText, sleepIrregular && styles.irregularChipTextActive]}>수면 불규칙</Text>
-        </Pressable>
         <Pressable
           style={[styles.saveButton, justSaved && styles.saveButtonSuccess, saving && styles.saveButtonDisabled]}
           onPress={handleButtonPress}
@@ -363,28 +353,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-  },
-  irregularChip: {
-    paddingHorizontal: 12,
-    height: 40,
-    borderRadius: radius.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.surface,
-  },
-  irregularChipActive: {
-    backgroundColor: colors.accent,
-  },
-  irregularChipText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: colors.muted,
-  },
-  irregularChipTextActive: {
-    color: '#5C4900',
-  },
-  irregularChipDisabled: {
-    opacity: 0.5,
   },
   saveButton: {
     flex: 1,

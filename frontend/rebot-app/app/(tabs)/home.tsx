@@ -156,12 +156,12 @@ export default function HomeScreen() {
 
         <View style={styles.quickActions}>
           <Pressable style={styles.quickCard} onPress={() => router.push('/(tabs)/diagnosis')}>
-            <View style={[styles.quickIcon, styles.quickIconAccent]}><Ionicons name="checkbox-outline" size={18} color="#8A6B00" /></View>
+            <View style={[styles.quickIcon, styles.quickIconAccent]}><Ionicons name="checkbox-outline" size={18} color={colors.white} /></View>
             <Text style={styles.quickTitle} numberOfLines={1}>AI 자가진단</Text>
             <Ionicons name="chevron-forward" size={15} color={colors.muted} />
           </Pressable>
           <Pressable style={styles.quickCard} onPress={() => router.push('/(tabs)/solution')}>
-            <View style={[styles.quickIcon, styles.quickIconDark]}><Ionicons name="bulb" size={18} color={colors.white} /></View>
+            <View style={[styles.quickIcon, styles.quickIconAccent]}><Ionicons name="bulb" size={18} color={colors.white} /></View>
             <Text style={styles.quickTitle} numberOfLines={1}>AI 솔루션</Text>
             <Ionicons name="chevron-forward" size={15} color={colors.muted} />
           </Pressable>
@@ -283,9 +283,6 @@ const styles = StyleSheet.create({
   },
   quickIconAccent: {
     backgroundColor: colors.accent,
-  },
-  quickIconDark: {
-    backgroundColor: colors.text,
   },
   quickTitle: {
     flex: 1,

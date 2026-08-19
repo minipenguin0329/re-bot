@@ -69,7 +69,6 @@ def _build_analysis_context(
     log_fields = (
         "date",
         "sleep_hours",
-        "sleep_irregular",
         "breakfast",
         "lunch",
         "dinner",

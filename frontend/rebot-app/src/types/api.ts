@@ -31,7 +31,6 @@ export type MeResponse = {
 export type DailyLogPayload = {
   date?: string;
   sleep_hours?: number | null;
-  sleep_irregular?: boolean;
   water_ml?: number | null;
   breakfast?: boolean;
   lunch?: boolean;

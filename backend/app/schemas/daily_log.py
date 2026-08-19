@@ -11,7 +11,6 @@ Note = Annotated[str, Field(max_length=2000)]
 class DailyLogBase(BaseModel):
     date: Date = Field(default_factory=Date.today)
     sleep_hours: float | None = Field(default=None, ge=0, le=24)
-    sleep_irregular: bool = False
     water_ml: int | None = Field(default=None, ge=0, le=20000)
     breakfast: bool = False
     lunch: bool = False
@@ -29,7 +28,6 @@ class DailyLogCreate(DailyLogBase):
 class DailyLogUpdate(BaseModel):
     date: Date | None = None
     sleep_hours: float | None = Field(default=None, ge=0, le=24)
-    sleep_irregular: bool | None = None
     water_ml: int | None = Field(default=None, ge=0, le=20000)
     breakfast: bool | None = None
     lunch: bool | None = None
