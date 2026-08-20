@@ -26,3 +26,22 @@ services:
         sync: false
       - key: ALLOWED_ORIGINS
         sync: false
+
+  - type: web
+    name: rebot-frontend
+    runtime: static
+    rootDir: frontend/rebot-app
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && npx expo export --platform web
+    staticPublishPath: ./dist
+    autoDeployTrigger: commit
+    envVars:
+      - key: EXPO_PUBLIC_API_BASE_URL
+        value: https://rebot-backend.onrender.com
+      - key: EXPO_PUBLIC_SUPABASE_URL
+        value: https://jdhassvacgsgkisvtcxi.supabase.co
+      - key: EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+        value: sb_publishable_HGYc1tEOdKw1KmJS5UaHdQ_v79Dd-VY
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
